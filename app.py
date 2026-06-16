@@ -146,7 +146,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
     st.subheader("📝 신입부원 모집")
     
     # 탭으로 지원서 작성과 내역 확인 기능 분리
-    tab1, tab2 = st.tabs(["✍️ 지원서 작성", "🔍 제출 내역 확인"])
+    tab1, tab2 = st.tabs(["지원서 작성", "제출 내역 확인"])
     
     # [탭 1] 지원서 작성 폼
     with tab1:
@@ -187,7 +187,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                         slots_data = [{"applicant_id": new_app_id, "interview_time": slot} for slot in selected_slots]
                         supabase.table("interview_slots").insert(slots_data).execute()
                         
-                        st.success(f"🎉 성공적으로 접수되었습니다! 본인의 지원서 ID는 [{new_app_id}] 입니다. (조회 시 필요하니 꼭 기억해 주세요!)")
+                        st.success(f"🎉 성공적으로 접수되었습니다! 본인의 지원서 ID는 [{new_app_id}] 입니다.\n원할 경우 언제든지 지원서 ID를 이용해 본인의 지원서를 조회할 수 있습니다.")
                     except Exception as e:
                         st.error(f"데이터 저장 중 오류가 발생했습니다: {e}")
                 else:
@@ -205,7 +205,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                     
                     if response.data:
                         app_data = response.data[0]
-                        st.success(f"✅ {app_data['name']}님의 지원서가 확인되었습니다.")
+                        st.success(f"✅ {app_data['name']}님의 지원서는 다음과 같습니다.")
                         
                         # 읽기 전용으로 출력
                         st.write(f"**학번:** {app_data['student_id']}")
@@ -217,7 +217,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                         st.write(f"**접수 일시:** {pd.to_datetime(app_data['created_at']).strftime('%Y-%m-%d %H:%M')}")
                         
                     else:
-                        st.error("❌ 일치하는 지원서 ID가 없습니다. 번호를 다시 확인해 주세요.")
+                        st.error("❌ 일치하는 지원서 ID가 없습니다.")
                 except Exception as e:
                     st.error(f"조회 중 오류가 발생했습니다: {e}")
             else:
