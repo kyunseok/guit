@@ -5,12 +5,12 @@ from supabase import create_client, Client
 
 st.set_page_config(page_title="기타하나", page_icon="🎸", layout="centered")
 
+# 1. 헤더 및 소셜 링크 영역
 st.markdown("<h1 style='text-align: center; font-size: 4rem; margin-bottom: 0.5rem;'>기타하나</h1>", unsafe_allow_html=True)
 
-# 로고 이미지를 중앙 정렬하여 배치 (width로 크기 조절 가능)
 col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
 with col_img2:
-    st.image("guitLogo.png", use_container_width=True) # 또는 웹상의 이미지 URL 입력
+    st.image("guitLogo.png", use_container_width=True)
 
 st.markdown('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">', unsafe_allow_html=True)
 
@@ -26,30 +26,27 @@ button_html = """
 """
 st.markdown(button_html, unsafe_allow_html=True)
 
-###
-
-# Supabase 클라이언트 초기화 (service_role 키 사용 중)
+# Supabase 클라이언트 초기화
 url: str = st.secrets["supabase"]["url"]
 key: str = st.secrets["supabase"]["key"]
 supabase: Client = create_client(url, key)
 
 # 세션 상태 초기화
 if 'current_view' not in st.session_state:
-    st.session_state['current_view'] = '메인'
-if 'admin_authenticated' not in st.session_state:
-    st.session_state['admin_authenticated'] = False
+    st.session_state['current_view'] = '동아리 소개'
+# 권한 상태: 'none', 'member', 'admin'
+if 'auth_level' not in st.session_state:
+    st.session_state['auth_level'] = 'none'
 if 'setlist_sessions' not in st.session_state:
     st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
 
-# 2. 내비게이션 버튼 영역 (위에서 아래로 수직 정렬)
+# 2. 내비게이션 버튼 영역 (동아리 일정은 대시보드 안으로 이동)
 if st.button("동아리 소개", use_container_width=True): 
     st.session_state['current_view'] = '동아리 소개'
-if st.button("동아리 일정", use_container_width=True): 
-    st.session_state['current_view'] = '동아리 일정'
 if st.button("신입부원 모집", use_container_width=True): 
     st.session_state['current_view'] = '신입부원 모집'
-if st.button("👑 운영진 전용", use_container_width=True): 
-    st.session_state['current_view'] = '운영진 전용'
+if st.button("🎸 기존부원 대시보드", use_container_width=True): 
+    st.session_state['current_view'] = '기존부원 대시보드'
 
 st.markdown("---")
 
@@ -58,56 +55,12 @@ if st.session_state['current_view'] == '동아리 소개':
     st.subheader("🎸 동아리 소개")
     st.write("기타하나의 소개 및 활동 내역이 들어갈 자리입니다.")
 
-elif st.session_state['current_view'] == '동아리 일정':
-    st.subheader("📅 동아리 일정")
-    st.write("- **3월 15일:** 신입생 환영회 및 OT")
-    st.write("- **5월 20일:** 1학기 정기 공연")
-    st.divider()
-    
-    st.subheader("🎧 셋리스트 신청")
-    song_name = st.text_input("곡 제목", placeholder="예: Marigold")
-    artist = st.text_input("아티스트", placeholder="예: Aimyon")
-    
-    session_types = ["보컬", "통기타", "일렉", "베이스", "드럼", "키보드", "퍼커션", "기타"]
-    for i, session in enumerate(st.session_state['setlist_sessions']):
-        c1, c2, c3 = st.columns([2, 3, 1]) 
-        with c1:
-            session['role'] = st.selectbox("세션 구분", session_types, index=session_types.index(session['role']) if session['role'] in session_types else 0, key=f"role_{session['id']}")
-        with c2:
-            session['name'] = st.text_input("희망 부원 (선택)", value=session['name'], placeholder="이름 입력", key=f"name_{session['id']}")
-        with c3:
-            st.write("") 
-            if st.button("❌ 삭제", key=f"del_{session['id']}"):
-                st.session_state['setlist_sessions'].pop(i)
-                st.rerun()
-                
-    if st.button("➕ 세션 추가"):
-        st.session_state['setlist_sessions'].append({"id": str(uuid.uuid4()), "role": "통기타", "name": ""})
-        st.rerun()
-        
-    st.write("")
-    if st.button("🚀 셋리스트 신청하기", type="primary", use_container_width=True):
-        if song_name and artist and len(st.session_state['setlist_sessions']) > 0:
-            try:
-                clean_sessions = [{"role": s["role"], "name": s["name"]} for s in st.session_state['setlist_sessions']]
-                supabase.table("setlists").insert({"song_name": song_name, "artist": artist, "sessions": clean_sessions}).execute()
-                st.success("✅ 셋리스트 신청이 완료되었습니다!")
-                st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
-            except Exception as e:
-                st.error(f"오류가 발생했습니다: {e}")
-        else:
-            st.warning("곡 제목, 아티스트, 최소 1개의 세션을 입력해 주세요.")
-
-# 📝 4. 신입부원 모집 (면접 일정 선택 추가)
 elif st.session_state['current_view'] == '신입부원 모집':
     st.subheader("📝 신입부원 모집")
     
-    # 사전에 정의해 둔 면접 일정 리스트
     available_interview_slots = [
-        "9월 4일 (수) 18:00 - 18:30",
-        "9월 4일 (수) 18:30 - 19:00",
-        "9월 5일 (목) 18:00 - 18:30",
-        "9월 5일 (목) 18:30 - 19:00",
+        "9월 4일 (수) 18:00 - 18:30", "9월 4일 (수) 18:30 - 19:00",
+        "9월 5일 (목) 18:00 - 18:30", "9월 5일 (목) 18:30 - 19:00",
         "9월 6일 (금) 19:00 - 19:30"
     ]
     
@@ -131,7 +84,6 @@ elif st.session_state['current_view'] == '신입부원 모집':
                     }).execute()
                     
                     new_applicant_id = response.data[0]['id']
-                    
                     slots_data = [{"applicant_id": new_applicant_id, "interview_time": slot} for slot in selected_slots]
                     supabase.table("interview_slots").insert(slots_data).execute()
                     
@@ -141,44 +93,130 @@ elif st.session_state['current_view'] == '신입부원 모집':
             else:
                 st.warning("⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
 
-# 👑 5. 운영진 전용
-elif st.session_state['current_view'] == '운영진 전용':
-    st.subheader("🔒 운영진 전용 대시보드")
-    if not st.session_state['admin_authenticated']:
-        st.info("관리자 비밀번호를 입력해 주세요.")
+# 4. 기존부원 대시보드 (권한에 따른 분기)
+elif st.session_state['current_view'] == '기존부원 대시보드':
+    st.subheader("🎸 기존부원 대시보드")
+    
+    # 4-1. 로그인 화면
+    if st.session_state['auth_level'] == 'none':
+        st.info("부원 또는 운영진 비밀번호를 입력해 주세요.")
         pwd_input = st.text_input("비밀번호", type="password") 
-        if st.button("확인"):
+        if st.button("잠금 해제"):
             if pwd_input == st.secrets["admin"]["password"]:
-                st.session_state['admin_authenticated'] = True
+                st.session_state['auth_level'] = 'admin'
+                st.rerun()
+            elif pwd_input == st.secrets["member"]["password"]:
+                st.session_state['auth_level'] = 'member'
                 st.rerun()
             else:
                 st.error("비밀번호가 틀렸습니다.")
+                
+    # 4-2. 로그인 완료 상태 (부원 & 운영진 공통 기능)
     else:
-        st.success("인증되었습니다. 접수된 지원서 목록을 불러옵니다.")
-        try:
-            response = supabase.table("applicants").select("*, interview_slots(interview_time)").order("created_at", desc=True).execute()
-            data = response.data
+        st.success(f"인증 완료: {'운영진' if st.session_state['auth_level'] == 'admin' else '일반 부원'} 모드")
+        
+        # [공통 기능] 동아리 일정 & 셋리스트 신청
+        st.write("### 📅 동아리 일정 및 셋리스트 신청")
+        st.write("- **3월 15일:** 신입생 환영회 및 OT")
+        st.write("- **5월 20일:** 1학기 정기 공연")
+        
+        with st.expander("🎧 셋리스트 신청하기", expanded=True):
+            song_name = st.text_input("곡 제목", placeholder="예: Marigold")
+            artist = st.text_input("아티스트", placeholder="예: Aimyon")
             
-            if data:
-                for row in data:
-                    slots = row.get('interview_slots', [])
-                    row['면접 가능 시간'] = ", ".join([s['interview_time'] for s in slots]) if slots else "선택 안함"
-                    del row['interview_slots']
+            session_types = ["보컬", "통기타", "일렉", "베이스", "드럼", "키보드", "퍼커션", "기타"]
+            for i, session in enumerate(st.session_state['setlist_sessions']):
+                c1, c2, c3 = st.columns([2, 3, 1]) 
+                with c1:
+                    session['role'] = st.selectbox("세션 구분", session_types, index=session_types.index(session['role']) if session['role'] in session_types else 0, key=f"role_{session['id']}")
+                with c2:
+                    session['name'] = st.text_input("희망 부원 (선택)", value=session['name'], placeholder="이름 입력", key=f"name_{session['id']}")
+                with c3:
+                    st.write("") 
+                    if st.button("❌", key=f"del_{session['id']}"):
+                        st.session_state['setlist_sessions'].pop(i)
+                        st.rerun()
+                        
+            if st.button("➕ 세션 추가"):
+                st.session_state['setlist_sessions'].append({"id": str(uuid.uuid4()), "role": "통기타", "name": ""})
+                st.rerun()
                 
-                df = pd.DataFrame(data)
-                df = df.rename(columns={"id": "접수번호", "name": "이름", "student_id": "학번", "phone": "연락처", "motive": "지원 사유", "created_at": "접수 일시"})
-                df['접수 일시'] = pd.to_datetime(df['접수 일시']).dt.strftime('%Y-%m-%d %H:%M')
-                
-                df = df[['접수번호', '이름', '학번', '연락처', '면접 가능 시간', '지원 사유', '접수 일시']]
-                
-                st.dataframe(df, use_container_width=True, hide_index=True)
-            else:
-                st.info("아직 접수된 지원서가 없습니다.")
-        except Exception as e:
-            st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
+            if st.button("🚀 신청하기", type="primary"):
+                if song_name and artist and len(st.session_state['setlist_sessions']) > 0:
+                    try:
+                        clean_sessions = [{"role": s["role"], "name": s["name"]} for s in st.session_state['setlist_sessions']]
+                        supabase.table("setlists").insert({"song_name": song_name, "artist": artist, "sessions": clean_sessions}).execute()
+                        st.success("✅ 셋리스트 신청 완료!")
+                        st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"오류: {e}")
+                else:
+                    st.warning("입력 항목을 확인해 주세요.")
+
+        # 4-3. [운영진 전용 기능] 면접 일정 관리 및 알고리즘 배정
+        if st.session_state['auth_level'] == 'admin':
+            st.divider()
+            st.write("### 🔒 신입부원 면접 관리")
             
+            try:
+                response = supabase.table("applicants").select("*, interview_slots(interview_time)").order("created_at", desc=True).execute()
+                data = response.data
+                
+                if data:
+                    app_list = []
+                    for row in data:
+                        slots = [s['interview_time'] for s in row.get('interview_slots', [])]
+                        app_list.append({
+                            "이름": row['name'], "학번": row['student_id'], "연락처": row['phone'],
+                            "slots": slots, "slot_count": len(slots), "지원 사유": row['motive']
+                        })
+                    
+                    st.write(f"총 {len(app_list)}명의 지원자가 대기 중입니다.")
+                    
+                    if st.button("🤖 면접 시간 자동 배정 (Greedy 알고리즘)"):
+                        # 1. 제약 조건이 가장 많은(선택한 시간이 적은) 지원자부터 정렬
+                        sorted_apps = sorted(app_list, key=lambda x: x['slot_count'])
+                        
+                        assigned_times = {} # 배정된 시간: 지원자 이름
+                        results = []
+                        
+                        # 2. 순서대로 순회하며 가능한 빈 시간에 즉시 할당
+                        for app in sorted_apps:
+                            assigned_slot = "배정 실패 (수동 조율)"
+                            for slot in app['slots']:
+                                if slot not in assigned_times:
+                                    assigned_times[slot] = app['이름']
+                                    assigned_slot = slot
+                                    break # 배정 성공 시 다음 지원자로 이동
+                            
+                            results.append({
+                                "이름": app['이름'], "학번": app['학번'], "연락처": app['연락처'],
+                                "배정된 시간": assigned_slot, "지원 사유": app['지원 사유']
+                            })
+                            
+                        result_df = pd.DataFrame(results)
+                        
+                        st.success("면접 배정이 완료되었습니다!")
+                        st.dataframe(result_df, use_container_width=True, hide_index=True)
+                        
+                        # 스프레드시트(CSV) 내보내기 기능
+                        csv = result_df.to_csv(index=False).encode('utf-8-sig')
+                        st.download_button(
+                            label="📥 결과 스프레드시트로 다운로드 (CSV)",
+                            data=csv,
+                            file_name='면접배정결과.csv',
+                            mime='text/csv',
+                        )
+                else:
+                    st.info("접수된 지원서가 없습니다.")
+            except Exception as e:
+                st.error(f"오류가 발생했습니다: {e}")
+
+        st.divider()
         if st.button("로그아웃"):
-            st.session_state['admin_authenticated'] = False
+            st.session_state['auth_level'] = 'none'
             st.rerun()
+
 else:
     st.markdown("<p style='text-align: center;'>위 버튼을 클릭하여 메뉴를 확인하세요.</p>", unsafe_allow_html=True)
