@@ -1,0 +1,7 @@
+[theme]
+base = "light"
+primaryColor = "#8B4513" # SaddleBrown (안정적인 고동색)
+backgroundColor = "#FDF5E6" # OldLace
+secondaryBackgroundColor = "#F5DEB3" # Wheat
+textColor = "#3E2723" 
+font = "sans serif"
