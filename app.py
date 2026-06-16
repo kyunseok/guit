@@ -167,9 +167,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
             if submitted:
                 if name and student_id and phone and motive and selected_slots:
                     try:
-                        # 6자리 영문+숫자 난수 ID 생성 및 중복 확인
                         while True:
-                            # 영문 대문자와 숫자를 조합하여 6자리 코드 생성
                             new_app_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
                             check_dup = supabase.table("applicants").select("id").eq("id", new_app_id).execute()
                             if not check_dup.data:
@@ -184,7 +182,12 @@ elif st.session_state['current_view'] == '신입부원 모집':
                         
                         st.success(f"🎉 성공적으로 접수되었습니다! 본인의 지원서 코드는 [{new_app_id}] 입니다.\n원할 경우 언제든지 지원서 코드를 이용해 본인의 지원서를 조회할 수 있습니다.")
                     except Exception as e:
-                        st.error(f"데이터 저장 중 오류가 발생했습니다: {e}")
+                        # [변경됨] 에러 메시지에 '23505' 또는 'unique' 키워드가 포함되어 있으면 친절한 메시지로 변경
+                        error_msg = str(e)
+                        if '23505' in error_msg or 'unique_student_id' in error_msg:
+                            st.warning("⚠️ 이미 해당 학번으로 신청한 내역이 존재합니다.")
+                        else:
+                            st.error(f"데이터 저장 중 오류가 발생했습니다: {e}")
                 else:
                     st.warning("⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
 
@@ -195,7 +198,6 @@ elif st.session_state['current_view'] == '신입부원 모집':
         if st.button("내 지원서 조회하기"):
             if search_id:
                 try:
-                    # 사용자가 소문자로 입력해도 대문자로 변환하여 검색되도록 처리
                     search_id = search_id.upper()
                     response = supabase.table("applicants").select("*, interview_slots(interview_time)").eq("id", search_id).execute()
                     
@@ -298,6 +300,7 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
     if st.session_state['auth_level'] == 'none':
         st.info("비밀번호를 입력해 주세요.")
         pwd_input = st.text_input("비밀번호", type="password", max_chars=30) 
+        
         if st.button("잠금 해제"):
             if pwd_input == st.secrets["admin"]["password"]:
                 st.session_state['auth_level'] = 'admin'
