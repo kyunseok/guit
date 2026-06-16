@@ -266,7 +266,7 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
                 st.error("비밀번호가 틀렸습니다.")
                 
     else:
-        st.success(f"인증 완료: {'운영진' if st.session_state['auth_level'] == 'admin' else '일반 부원'} 모드")
+        st.success(f"인증 완료: {'회장단' if st.session_state['auth_level'] == 'admin' else '부원'}")
         
         if st.session_state['auth_level'] == 'member':
             st.write("상단의 **[동아리 일정]** 탭으로 이동하시면 셋리스트를 신청하고 확인하실 수 있습니다.")
