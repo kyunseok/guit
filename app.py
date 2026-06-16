@@ -4,6 +4,7 @@ import uuid
 import random
 import string
 from supabase import create_client, Client
+import extra_streamlit_components as stx
 
 st.set_page_config(page_title="기타하나", page_icon="🎸", layout="centered")
 
