@@ -41,9 +41,6 @@ if 'admin_authenticated' not in st.session_state:
 if 'setlist_sessions' not in st.session_state:
     st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
 
-# 1. 헤더 및 소셜 링크 영역
-st.markdown("<h1 style='text-align: center; font-size: 4rem; margin-bottom: 0.5rem;'>기타하나</h1>", unsafe_allow_html=True)
-
 s_col1, s_col2, s_col3, s_col4 = st.columns([1.5, 1, 1, 1.5])
 with s_col2:
     st.link_button("📺 YouTube", "http://www.youtube.com/@guitarhanapostech", use_container_width=True)
