@@ -38,6 +38,8 @@ if 'auth_level' not in st.session_state:
     st.session_state['auth_level'] = 'none' # 'none', 'member', 'admin'
 if 'setlist_sessions' not in st.session_state:
     st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
+if 'show_greedy_result' not in st.session_state:
+    st.session_state['show_greedy_result'] = False
 
 # 2. 내비게이션 버튼 영역
 if st.button("동아리 소개", use_container_width=True): 
@@ -101,68 +103,11 @@ elif st.session_state['current_view'] == '동아리 일정':
             else:
                 st.warning("입력 항목을 확인해 주세요.")
 
-# 📝 4. 신입부원 모집 (운영진 대시보드 결합)
+# 📝 4. 신입부원 모집
 elif st.session_state['current_view'] == '신입부원 모집':
     st.subheader("📝 신입부원 모집")
     
-    # 👑 운영진 권한일 때만 보이는 지원자 목록 및 알고리즘 배정
-    if st.session_state['auth_level'] == 'admin':
-        st.info("👑 운영진 모드: 현재 접수된 지원서 목록 및 면접 배정 기능을 활성화합니다.")
-        
-        try:
-            response = supabase.table("applicants").select("*, interview_slots(interview_time)").order("created_at", desc=True).execute()
-            data = response.data
-            
-            if data:
-                app_list = []
-                for row in data:
-                    slots = [s['interview_time'] for s in row.get('interview_slots', [])]
-                    app_list.append({
-                        "이름": row['name'], "학번": row['student_id'], "연락처": row['phone'],
-                        "slots": slots, "slot_count": len(slots), "지원 사유": row['motive']
-                    })
-                
-                st.write(f"### 📊 총 {len(app_list)}명의 지원자가 대기 중입니다.")
-                
-                if st.button("🤖 면접 시간 자동 배정 (Greedy 알고리즘)", type="primary"):
-                    sorted_apps = sorted(app_list, key=lambda x: x['slot_count'])
-                    
-                    assigned_times = {} 
-                    results = []
-                    
-                    for app in sorted_apps:
-                        assigned_slot = "배정 실패 (수동 조율 필요)"
-                        for slot in app['slots']:
-                            if slot not in assigned_times:
-                                assigned_times[slot] = app['이름']
-                                assigned_slot = slot
-                                break
-                        
-                        results.append({
-                            "이름": app['이름'], "학번": app['학번'], "연락처": app['연락처'],
-                            "배정된 시간": assigned_slot, "지원 사유": app['지원 사유']
-                        })
-                        
-                    result_df = pd.DataFrame(results)
-                    st.success("면접 배정이 완료되었습니다!")
-                    st.dataframe(result_df, use_container_width=True, hide_index=True)
-                    
-                    csv = result_df.to_csv(index=False).encode('utf-8-sig')
-                    st.download_button(
-                        label="📥 결과 다운로드 (CSV)",
-                        data=csv,
-                        file_name='면접배정결과.csv',
-                        mime='text/csv',
-                    )
-            else:
-                st.info("아직 접수된 지원서가 없습니다.")
-        except Exception as e:
-            st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
-            
-        st.divider()
-        st.write("#### 👇 아래는 일반 지원자들에게 보여지는 폼 화면입니다.")
-
-    # 일반 사용자 화면 (지원서 제출 폼)
+    # 4-1. 일반 사용자 화면 (지원서 제출 폼 - 항상 상단에 표시)
     available_interview_slots = [
         "9월 4일 (수) 18:00 - 18:30", "9월 4일 (수) 18:30 - 19:00",
         "9월 5일 (목) 18:00 - 18:30", "9월 5일 (목) 18:30 - 19:00",
@@ -198,6 +143,86 @@ elif st.session_state['current_view'] == '신입부원 모집':
             else:
                 st.warning("⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
 
+    # 4-2. 👑 운영진 권한일 때만 폼 하단에 나타나는 전체 데이터 및 배정 시스템
+    if st.session_state['auth_level'] == 'admin':
+        st.divider()
+        st.subheader("👑 [운영진 전용] 접수 현황 및 면접 배정")
+        
+        try:
+            # 전체 데이터 불러오기
+            response = supabase.table("applicants").select("*, interview_slots(interview_time)").order("created_at", desc=True).execute()
+            data = response.data
+            
+            if data:
+                app_list = []
+                for row in data:
+                    slots = [s['interview_time'] for s in row.get('interview_slots', [])]
+                    app_list.append({
+                        "접수번호": row['id'],
+                        "이름": row['name'], 
+                        "학번": row['student_id'], 
+                        "연락처": row['phone'],
+                        "면접 가능 시간": ", ".join(slots) if slots else "선택 안함",
+                        "지원 사유": row['motive'],
+                        "접수 일시": row['created_at'],
+                        "slots_raw": slots, # 알고리즘 연산용 숨김 데이터
+                        "slot_count": len(slots) # 정렬용 숨김 데이터
+                    })
+                
+                # 1. 전체 지원서 표출 (Raw 데이터)
+                st.write(f"##### 📊 전체 지원서 목록 (총 {len(app_list)}명)")
+                df_all = pd.DataFrame(app_list)
+                
+                # 화면에 보여줄 때는 알고리즘 연산용 숨김 데이터(slots_raw, slot_count) 컬럼을 제거
+                df_display = df_all.drop(columns=['slots_raw', 'slot_count'])
+                df_display['접수 일시'] = pd.to_datetime(df_display['접수 일시']).dt.strftime('%Y-%m-%d %H:%M')
+                st.dataframe(df_display, use_container_width=True, hide_index=True)
+                
+                st.write("")
+                
+                # 2. 면접 시간 자동 배정 알고리즘 실행 버튼
+                if st.button("🤖 면접 시간 자동 배정 (Greedy 알고리즘)", type="primary"):
+                    st.session_state['show_greedy_result'] = True
+                
+                # 3. 배정 결과 표출 (버튼을 누른 상태 유지)
+                if st.session_state['show_greedy_result']:
+                    st.write("##### ✨ 면접 시간 자동 배정 결과")
+                    
+                    # 선택지가 가장 적은 지원자부터 정렬
+                    sorted_apps = sorted(app_list, key=lambda x: x['slot_count'])
+                    
+                    assigned_times = {} 
+                    results = []
+                    
+                    for app in sorted_apps:
+                        assigned_slot = "배정 실패 (수동 조율 필요)"
+                        for slot in app['slots_raw']:
+                            if slot not in assigned_times:
+                                assigned_times[slot] = app['이름']
+                                assigned_slot = slot
+                                break
+                        
+                        results.append({
+                            "이름": app['이름'], "학번": app['학번'], "연락처": app['연락처'],
+                            "배정된 시간": assigned_slot, "지원 사유": app['지원 사유']
+                        })
+                        
+                    result_df = pd.DataFrame(results)
+                    st.success("면접 배정이 완료되었습니다!")
+                    st.dataframe(result_df, use_container_width=True, hide_index=True)
+                    
+                    csv = result_df.to_csv(index=False).encode('utf-8-sig')
+                    st.download_button(
+                        label="📥 배정 결과 다운로드 (CSV)",
+                        data=csv,
+                        file_name='면접배정결과.csv',
+                        mime='text/csv',
+                    )
+            else:
+                st.info("아직 접수된 지원서가 없습니다.")
+        except Exception as e:
+            st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
+
 # 🎸 5. 기존부원 대시보드
 elif st.session_state['current_view'] == '기존부원 대시보드':
     st.subheader("🎸 기존부원 대시보드")
@@ -227,6 +252,8 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
         st.divider()
         if st.button("로그아웃"):
             st.session_state['auth_level'] = 'none'
+            # 로그아웃 시 배정 결과 보기 상태도 초기화
+            st.session_state['show_greedy_result'] = False 
             st.rerun()
 
 else:
