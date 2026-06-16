@@ -41,18 +41,15 @@ if 'admin_authenticated' not in st.session_state:
 if 'setlist_sessions' not in st.session_state:
     st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
 
-# s_col1, s_col2, s_col3, s_col4 = st.columns([1.5, 1, 1, 1.5])
-
-# 2. 내비게이션 버튼 영역
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    if st.button("동아리 소개", use_container_width=True): st.session_state['current_view'] = '동아리 소개'
-with col2:
-    if st.button("동아리 일정", use_container_width=True): st.session_state['current_view'] = '동아리 일정'
-with col3:
-    if st.button("신입부원 모집", use_container_width=True): st.session_state['current_view'] = '신입부원 모집'
-with col4:
-    if st.button("👑 운영진 전용", use_container_width=True): st.session_state['current_view'] = '운영진 전용'
+# 2. 내비게이션 버튼 영역 (위에서 아래로 수직 정렬)
+if st.button("동아리 소개", use_container_width=True): 
+    st.session_state['current_view'] = '동아리 소개'
+if st.button("동아리 일정", use_container_width=True): 
+    st.session_state['current_view'] = '동아리 일정'
+if st.button("신입부원 모집", use_container_width=True): 
+    st.session_state['current_view'] = '신입부원 모집'
+if st.button("👑 운영진 전용", use_container_width=True): 
+    st.session_state['current_view'] = '운영진 전용'
 
 st.markdown("---")
 
@@ -105,7 +102,7 @@ elif st.session_state['current_view'] == '동아리 일정':
 elif st.session_state['current_view'] == '신입부원 모집':
     st.subheader("📝 신입부원 모집")
     
-    # 사전에 정의해 둔 면접 일정 리스트 (원하는 대로 수정 가능)
+    # 사전에 정의해 둔 면접 일정 리스트
     available_interview_slots = [
         "9월 4일 (수) 18:00 - 18:30",
         "9월 4일 (수) 18:30 - 19:00",
@@ -122,7 +119,6 @@ elif st.session_state['current_view'] == '신입부원 모집':
         
         st.write("---")
         st.write("📅 **면접 가능 일정 선택 (복수 선택 가능)**")
-        # 지원자가 다중 선택할 수 있는 멀티셀렉트 박스
         selected_slots = st.multiselect("가능한 시간을 모두 선택해 주세요.", available_interview_slots)
         
         submitted = st.form_submit_button("지원서 제출하기")
@@ -130,15 +126,12 @@ elif st.session_state['current_view'] == '신입부원 모집':
         if submitted:
             if name and student_id and phone and motive and selected_slots:
                 try:
-                    # 1. 지원자 기본 정보 저장
                     response = supabase.table("applicants").insert({
                         "name": name, "student_id": student_id, "phone": phone, "motive": motive
                     }).execute()
                     
-                    # 방금 부여된 지원자의 고유 ID(접수번호) 가져오기
                     new_applicant_id = response.data[0]['id']
                     
-                    # 2. 선택한 면접 일정들을 interview_slots 테이블에 개별 저장
                     slots_data = [{"applicant_id": new_applicant_id, "interview_time": slot} for slot in selected_slots]
                     supabase.table("interview_slots").insert(slots_data).execute()
                     
@@ -148,7 +141,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
             else:
                 st.warning("⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
 
-# 👑 5. 운영진 전용 (면접 일정 연동 확인)
+# 👑 5. 운영진 전용
 elif st.session_state['current_view'] == '운영진 전용':
     st.subheader("🔒 운영진 전용 대시보드")
     if not st.session_state['admin_authenticated']:
@@ -163,23 +156,19 @@ elif st.session_state['current_view'] == '운영진 전용':
     else:
         st.success("인증되었습니다. 접수된 지원서 목록을 불러옵니다.")
         try:
-            # JOIN 쿼리: applicants 테이블을 가져오면서 연결된 interview_slots 데이터도 함께 묶어서 가져옴
             response = supabase.table("applicants").select("*, interview_slots(interview_time)").order("created_at", desc=True).execute()
             data = response.data
             
             if data:
-                # 데이터를 표에 맞게 가공
                 for row in data:
-                    # interview_slots 리스트 안에 있는 시간들을 쉼표로 연결해서 보기 좋게 합침
                     slots = row.get('interview_slots', [])
                     row['면접 가능 시간'] = ", ".join([s['interview_time'] for s in slots]) if slots else "선택 안함"
-                    del row['interview_slots'] # 원본 리스트는 삭제
+                    del row['interview_slots']
                 
                 df = pd.DataFrame(data)
                 df = df.rename(columns={"id": "접수번호", "name": "이름", "student_id": "학번", "phone": "연락처", "motive": "지원 사유", "created_at": "접수 일시"})
                 df['접수 일시'] = pd.to_datetime(df['접수 일시']).dt.strftime('%Y-%m-%d %H:%M')
                 
-                # 운영진이 보기 편하게 열 순서 재배치
                 df = df[['접수번호', '이름', '학번', '연락처', '면접 가능 시간', '지원 사유', '접수 일시']]
                 
                 st.dataframe(df, use_container_width=True, hide_index=True)
