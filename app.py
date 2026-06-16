@@ -41,13 +41,7 @@ if 'admin_authenticated' not in st.session_state:
 if 'setlist_sessions' not in st.session_state:
     st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
 
-s_col1, s_col2, s_col3, s_col4 = st.columns([1.5, 1, 1, 1.5])
-with s_col2:
-    st.link_button("📺 YouTube", "http://www.youtube.com/@guitarhanapostech", use_container_width=True)
-with s_col3:
-    st.link_button("📸 Instagram", "https://www.instagram.com/postech_guitarhana?igsh=ZGdzd3BxcTd4MWxw", use_container_width=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
+# s_col1, s_col2, s_col3, s_col4 = st.columns([1.5, 1, 1, 1.5])
 
 # 2. 내비게이션 버튼 영역
 col1, col2, col3, col4 = st.columns(4)
