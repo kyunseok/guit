@@ -4,7 +4,6 @@ import uuid
 import random
 import string
 from supabase import create_client, Client
-import extra_streamlit_components as stx
 
 st.set_page_config(page_title="기타하나", page_icon="🎸", layout="centered")
 
@@ -43,8 +42,6 @@ if 'setlist_sessions' not in st.session_state:
     st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
 if 'show_greedy_result' not in st.session_state:
     st.session_state['show_greedy_result'] = False
-if 'login_fail_count' not in st.session_state:
-    st.session_state['login_fail_count'] = None
 
 # 2. 내비게이션 버튼 영역
 if st.button("동아리 소개", use_container_width=True): 
@@ -299,42 +296,18 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
     st.subheader("🎸 기존부원 대시보드")
     
     if st.session_state['auth_level'] == 'none':
-        cookie_manager = stx.CookieManager()
-        
-        # [핵심] 최초 접속 시 혹은 새로고침 시에만 쿠키에서 백업된 실패 횟수를 가져옴
-        if st.session_state['login_fail_count'] is None:
-            cookie_val = cookie_manager.get(cookie="fail_count")
-            st.session_state['login_fail_count'] = int(cookie_val) if cookie_val is not None else 0
-            
-        # 5회 이상 실패 시 브라우저 차단
-        if st.session_state['login_fail_count'] >= 5:
-            st.error("🔒 로그인 시도를 5회 연속 실패하여 브라우저 접근이 일시 차단되었습니다.")
-            st.warning("비밀번호를 잊으셨다면 관리자에게 문의해 주세요.")
-            
-        else:
-            st.info(f"비밀번호를 입력해 주세요. (현재 실패 횟수: {st.session_state['login_fail_count']}/5)")
-            pwd_input = st.text_input("비밀번호", type="password", max_chars=30) 
-            
-            if st.button("잠금 해제"):
-                if pwd_input == st.secrets["admin"]["password"]:
-                    cookie_manager.delete("fail_count")
-                    st.session_state['login_fail_count'] = 0 # 실패 횟수 초기화
-                    st.session_state['auth_level'] = 'admin'
-                    st.rerun()
-                elif pwd_input == st.secrets["member"]["password"]:
-                    cookie_manager.delete("fail_count")
-                    st.session_state['login_fail_count'] = 0 # 실패 횟수 초기화
-                    st.session_state['auth_level'] = 'member'
-                    st.rerun()
-                else:
-                    # 틀렸을 때 파이썬 메모리(session_state) 값을 즉시 올려서 1에 갇히는 현상 해결!
-                    st.session_state['login_fail_count'] += 1
-                    
-                    # 브라우저 쿠키에는 백업본을 구워둠 (새로고침 방어용)
-                    cookie_manager.set("fail_count", st.session_state['login_fail_count'], max_age=3600)
-                    st.error(f"비밀번호가 틀렸습니다. (실패 횟수: {st.session_state['login_fail_count']}/5)")
-                    st.rerun() # 횟수 표시를 즉시 갱신하기 위해 화면 새로고침
-                    
+        st.info("비밀번호를 입력해 주세요.")
+        pwd_input = st.text_input("비밀번호", type="password", max_chars=30) 
+        if st.button("잠금 해제"):
+            if pwd_input == st.secrets["admin"]["password"]:
+                st.session_state['auth_level'] = 'admin'
+                st.rerun()
+            elif pwd_input == st.secrets["member"]["password"]:
+                st.session_state['auth_level'] = 'member'
+                st.rerun()
+            else:
+                st.error("비밀번호가 틀렸습니다.")
+                
     else:
         st.success(f"인증 완료: {'회장단' if st.session_state['auth_level'] == 'admin' else '부원'}")
         
@@ -348,7 +321,6 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
         if st.button("로그아웃"):
             st.session_state['auth_level'] = 'none'
             st.session_state['show_greedy_result'] = False 
-            st.session_state['login_fail_count'] = 0 # 로그아웃 시 메모리 초기화
             st.rerun()
 
 else:
