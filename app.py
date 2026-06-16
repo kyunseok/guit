@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import uuid
 import random
+import string
 from supabase import create_client, Client
 
 st.set_page_config(page_title="기타하나", page_icon="🎸", layout="centered")
@@ -36,7 +37,7 @@ supabase: Client = create_client(url, key)
 if 'current_view' not in st.session_state:
     st.session_state['current_view'] = '동아리 소개'
 if 'auth_level' not in st.session_state:
-    st.session_state['auth_level'] = 'none' # 'none', 'member', 'admin'
+    st.session_state['auth_level'] = 'none' 
 if 'setlist_sessions' not in st.session_state:
     st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
 if 'show_greedy_result' not in st.session_state:
@@ -78,7 +79,6 @@ elif st.session_state['current_view'] == '동아리 일정':
     if st.session_state['auth_level'] == 'none':
         st.info("🔒 셋리스트 신청 및 확인은 기존 부원 전용 기능입니다.")
     else:
-        # 셋리스트 신청 폼 (max_chars 적용)
         song_name = st.text_input("곡 제목", placeholder="예: Marigold", max_chars=50)
         artist = st.text_input("아티스트", placeholder="예: Aimyon", max_chars=50)
         
@@ -88,7 +88,6 @@ elif st.session_state['current_view'] == '동아리 일정':
             with c1:
                 session['role'] = st.selectbox("세션 구분", session_types, index=session_types.index(session['role']) if session['role'] in session_types else 0, key=f"role_{session['id']}")
             with c2:
-                # 이름 입력란 길이 제한
                 session['name'] = st.text_input("희망 부원 (선택)", value=session['name'], placeholder="이름 입력", key=f"name_{session['id']}", max_chars=10)
             with c3:
                 st.write("") 
@@ -115,7 +114,6 @@ elif st.session_state['current_view'] == '동아리 일정':
         
         st.write("---")
         
-        # 신청된 셋리스트 목록 확인 기능
         st.subheader("📋 현재 신청된 셋리스트")
         try:
             response = supabase.table("setlists").select("*").order("created_at", desc=True).execute()
@@ -145,10 +143,8 @@ elif st.session_state['current_view'] == '동아리 일정':
 elif st.session_state['current_view'] == '신입부원 모집':
     st.subheader("📝 신입부원 모집")
     
-    # 탭으로 지원서 작성과 내역 확인 기능 분리
-    tab1, tab2 = st.tabs(["지원서 작성", "제출 내역 확인"])
+    tab1, tab2 = st.tabs(["✍️ 지원서 작성", "🔍 제출 내역 확인"])
     
-    # [탭 1] 지원서 작성 폼
     with tab1:
         available_interview_slots = [
             "9월 4일 (수) 18:00 - 18:30", "9월 4일 (수) 18:30 - 19:00",
@@ -157,7 +153,6 @@ elif st.session_state['current_view'] == '신입부원 모집':
         ]
         
         with st.form("recruitment_form", clear_on_submit=True):
-            # 악의적 입력 방지를 위한 글자 수 제한 (max_chars 적용)
             name = st.text_input("이름", max_chars=10)
             student_id = st.text_input("학번", max_chars=20)
             phone = st.text_input("연락처", max_chars=15)
@@ -172,36 +167,36 @@ elif st.session_state['current_view'] == '신입부원 모집':
             if submitted:
                 if name and student_id and phone and motive and selected_slots:
                     try:
-                        # 4자리 난수 ID 생성 및 중복 확인 방어 로직
+                        # 6자리 영문+숫자 난수 ID 생성 및 중복 확인
                         while True:
-                            new_app_id = str(random.randint(1000, 9999))
+                            # 영문 대문자와 숫자를 조합하여 6자리 코드 생성
+                            new_app_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
                             check_dup = supabase.table("applicants").select("id").eq("id", new_app_id).execute()
                             if not check_dup.data:
                                 break 
                         
-                        # 1. 지원자 기본 정보 저장 (ID 포함)
                         supabase.table("applicants").insert({
                             "id": new_app_id, "name": name, "student_id": student_id, "phone": phone, "motive": motive
                         }).execute()
                         
-                        # 2. 선택한 면접 일정 저장
                         slots_data = [{"applicant_id": new_app_id, "interview_time": slot} for slot in selected_slots]
                         supabase.table("interview_slots").insert(slots_data).execute()
                         
-                        st.success(f"🎉 성공적으로 접수되었습니다! 본인의 지원서 ID는 [{new_app_id}] 입니다.\n원할 경우 언제든지 지원서 ID를 이용해 본인의 지원서를 조회할 수 있습니다.")
+                        st.success(f"🎉 성공적으로 접수되었습니다! 본인의 지원서 코드는 [{new_app_id}] 입니다.\n원할 경우 언제든지 지원서 코드를 이용해 본인의 지원서를 조회할 수 있습니다.")
                     except Exception as e:
                         st.error(f"데이터 저장 중 오류가 발생했습니다: {e}")
                 else:
                     st.warning("⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
 
-    # [탭 2] 지원서 조회
     with tab2:
-        st.write("발급받은 4자리 지원서 ID를 입력하여 제출 내역을 확인할 수 있습니다.")
-        search_id = st.text_input("지원서 ID (4자리 숫자)", max_chars=4)
+        st.write("발급받은 6자리 지원서 코드를 입력하여 제출 내역을 확인할 수 있습니다.")
+        search_id = st.text_input("지원서 코드 (6자리 영문/숫자)", max_chars=6)
         
         if st.button("내 지원서 조회하기"):
             if search_id:
                 try:
+                    # 사용자가 소문자로 입력해도 대문자로 변환하여 검색되도록 처리
+                    search_id = search_id.upper()
                     response = supabase.table("applicants").select("*, interview_slots(interview_time)").eq("id", search_id).execute()
                     
                     if response.data:
@@ -217,13 +212,12 @@ elif st.session_state['current_view'] == '신입부원 모집':
                         st.write(f"**접수 일시:** {pd.to_datetime(app_data['created_at']).strftime('%Y-%m-%d %H:%M')}")
                         
                     else:
-                        st.error("❌ 일치하는 지원서 ID가 없습니다.")
+                        st.error("❌ 일치하는 지원서 코드가 없습니다.")
                 except Exception as e:
                     st.error(f"조회 중 오류가 발생했습니다: {e}")
             else:
-                st.warning("지원서 ID를 입력해 주세요.")
+                st.warning("지원서 코드를 입력해 주세요.")
 
-    # 👑 운영진 권한일 때만 하단에 나타나는 전체 데이터 및 배정 시스템
     if st.session_state['auth_level'] == 'admin':
         st.divider()
         st.subheader("지원서 현황 및 면접 배정 관리")
@@ -237,7 +231,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                 for row in data:
                     slots = [s['interview_time'] for s in row.get('interview_slots', [])]
                     app_list.append({
-                        "지원서ID": row['id'],
+                        "지원서코드": row['id'],
                         "이름": row['name'], 
                         "학번": row['student_id'], 
                         "연락처": row['phone'],
@@ -303,7 +297,6 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
     
     if st.session_state['auth_level'] == 'none':
         st.info("비밀번호를 입력해 주세요.")
-        # 비밀번호 입력란 길이 제한 (max_chars 적용)
         pwd_input = st.text_input("비밀번호", type="password", max_chars=30) 
         if st.button("잠금 해제"):
             if pwd_input == st.secrets["admin"]["password"]:
