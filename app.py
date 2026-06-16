@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import uuid
+import random
 from supabase import create_client, Client
 
 st.set_page_config(page_title="기타하나", page_icon="🎸", layout="centered")
@@ -58,7 +59,11 @@ if st.session_state['current_view'] == '동아리 소개':
     st.subheader("🎸 동아리 소개")
     st.write("""기타하나는 어쿠스틱 통기타 동아리입니다. 
             주로 정기공연, 버스킹 등의 행사를 진행하고 기타 뿐만 아니라 키보드, 드럼, 일렉, 베이스 등 여러가지 악기를 다루며 자신이 하고 싶은 곡으로 공연을 꾸며나갈 수 있습니다. 
-            또한 신입생들을 위해 동아리 내부에서 기타교실을 운영하기 때문에 기타에 자신이 없어도 동아리에 들어와서 배워나갈 수 있습니다.""")
+            또한 신입생들을 위해 동아리 내부에서 기타교실을 운영하기 때문에 기타에 자신이 없어도 동아리에 들어와서 배워나갈 수 있습니다.
+            \n\n
+            **Contact**
+            회장: 경규헌(gyuheon0117@postech.ac.kr)
+            웹사이트 관련 문제: 김윤석(kyunseok@postech.ac.kr)""")
 
 elif st.session_state['current_view'] == '동아리 일정':
     st.subheader("📅 동아리 일정")
@@ -140,41 +145,85 @@ elif st.session_state['current_view'] == '동아리 일정':
 elif st.session_state['current_view'] == '신입부원 모집':
     st.subheader("📝 신입부원 모집")
     
-    available_interview_slots = [
-        "9월 4일 (수) 18:00 - 18:30", "9월 4일 (수) 18:30 - 19:00",
-        "9월 5일 (목) 18:00 - 18:30", "9월 5일 (목) 18:30 - 19:00",
-        "9월 6일 (금) 19:00 - 19:30"
-    ]
+    # 탭으로 지원서 작성과 내역 확인 기능 분리
+    tab1, tab2 = st.tabs(["✍️ 지원서 작성", "🔍 제출 내역 확인"])
     
-    with st.form("recruitment_form", clear_on_submit=True):
-        name = st.text_input("이름")
-        student_id = st.text_input("학번")
-        phone = st.text_input("연락처")
-        motive = st.text_area("지원 사유", placeholder="기타하나에 지원하게 된 동기를 자유롭게 적어주세요.")
+    # [탭 1] 지원서 작성 폼
+    with tab1:
+        available_interview_slots = [
+            "9월 4일 (수) 18:00 - 18:30", "9월 4일 (수) 18:30 - 19:00",
+            "9월 5일 (목) 18:00 - 18:30", "9월 5일 (목) 18:30 - 19:00",
+            "9월 6일 (금) 19:00 - 19:30"
+        ]
         
-        st.write("---")
-        st.write("📅 **면접 가능 일정 선택 (복수 선택 가능)**")
-        selected_slots = st.multiselect("가능한 시간을 모두 선택해 주세요.", available_interview_slots)
-        
-        submitted = st.form_submit_button("지원서 제출하기")
-        
-        if submitted:
-            if name and student_id and phone and motive and selected_slots:
-                try:
-                    response = supabase.table("applicants").insert({
-                        "name": name, "student_id": student_id, "phone": phone, "motive": motive
-                    }).execute()
-                    
-                    new_applicant_id = response.data[0]['id']
-                    slots_data = [{"applicant_id": new_applicant_id, "interview_time": slot} for slot in selected_slots]
-                    supabase.table("interview_slots").insert(slots_data).execute()
-                    
-                    st.success(f"🎉 {name}님의 지원서가 성공적으로 접수되었습니다!")
-                except Exception as e:
-                    st.error(f"데이터 저장 중 오류가 발생했습니다: {e}")
-            else:
-                st.warning("⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
+        with st.form("recruitment_form", clear_on_submit=True):
+            name = st.text_input("이름")
+            student_id = st.text_input("학번")
+            phone = st.text_input("연락처")
+            motive = st.text_area("지원 사유", placeholder="기타하나에 지원하게 된 동기를 자유롭게 적어주세요.")
+            
+            st.write("---")
+            st.write("📅 **면접 가능 일정 선택 (복수 선택 가능)**")
+            selected_slots = st.multiselect("가능한 시간을 모두 선택해 주세요.", available_interview_slots)
+            
+            submitted = st.form_submit_button("지원서 제출하기")
+            
+            if submitted:
+                if name and student_id and phone and motive and selected_slots:
+                    try:
+                        # 4자리 난수 ID 생성 및 중복 확인 방어 로직
+                        while True:
+                            new_app_id = str(random.randint(1000, 9999))
+                            check_dup = supabase.table("applicants").select("id").eq("id", new_app_id).execute()
+                            if not check_dup.data:
+                                break # 중복이 없으면 반복문 탈출
+                        
+                        # 1. 지원자 기본 정보 저장 (ID 포함)
+                        supabase.table("applicants").insert({
+                            "id": new_app_id, "name": name, "student_id": student_id, "phone": phone, "motive": motive
+                        }).execute()
+                        
+                        # 2. 선택한 면접 일정 저장
+                        slots_data = [{"applicant_id": new_app_id, "interview_time": slot} for slot in selected_slots]
+                        supabase.table("interview_slots").insert(slots_data).execute()
+                        
+                        st.success(f"🎉 성공적으로 접수되었습니다! 본인의 지원서 ID는 [{new_app_id}] 입니다. (조회 시 필요하니 꼭 기억해 주세요!)")
+                    except Exception as e:
+                        st.error(f"데이터 저장 중 오류가 발생했습니다: {e}")
+                else:
+                    st.warning("⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
 
+    # [탭 2] 지원서 조회
+    with tab2:
+        st.write("발급받은 4자리 지원서 ID를 입력하여 제출 내역을 확인할 수 있습니다.")
+        search_id = st.text_input("지원서 ID (4자리 숫자)", max_chars=4)
+        
+        if st.button("내 지원서 조회하기"):
+            if search_id:
+                try:
+                    response = supabase.table("applicants").select("*, interview_slots(interview_time)").eq("id", search_id).execute()
+                    
+                    if response.data:
+                        app_data = response.data[0]
+                        st.success(f"✅ {app_data['name']}님의 지원서가 확인되었습니다.")
+                        
+                        # 읽기 전용으로 출력
+                        st.write(f"**학번:** {app_data['student_id']}")
+                        st.write(f"**연락처:** {app_data['phone']}")
+                        st.write(f"**지원 사유:**\n> {app_data['motive']}")
+                        
+                        slots = [s['interview_time'] for s in app_data.get('interview_slots', [])]
+                        st.write(f"**선택한 면접 일정:** {', '.join(slots) if slots else '없음'}")
+                        st.write(f"**접수 일시:** {pd.to_datetime(app_data['created_at']).strftime('%Y-%m-%d %H:%M')}")
+                        
+                    else:
+                        st.error("❌ 일치하는 지원서 ID가 없습니다. 번호를 다시 확인해 주세요.")
+                except Exception as e:
+                    st.error(f"조회 중 오류가 발생했습니다: {e}")
+            else:
+                st.warning("지원서 ID를 입력해 주세요.")
+
+    # 👑 운영진 권한일 때만 하단에 나타나는 전체 데이터 및 배정 시스템
     if st.session_state['auth_level'] == 'admin':
         st.divider()
         st.subheader("지원서 현황 및 면접 배정 관리")
@@ -188,7 +237,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                 for row in data:
                     slots = [s['interview_time'] for s in row.get('interview_slots', [])]
                     app_list.append({
-                        "접수번호": row['id'],
+                        "지원서ID": row['id'],
                         "이름": row['name'], 
                         "학번": row['student_id'], 
                         "연락처": row['phone'],
