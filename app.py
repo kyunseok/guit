@@ -56,8 +56,8 @@ st.markdown("---")
 # 3. 화면 분기 처리
 if st.session_state['current_view'] == '동아리 소개':
     st.subheader("🎸 동아리 소개")
-    st.write("""기타하나는 어쿠스틱 통기타 동아리입니다.
-            주로 정기공연, 버스킹 등의 행사를 진행하고 기타 뿐만 아니라 키보드, 드럼, 일렉, 베이스 등 여러가지 악기를 다루며 자신이 하고 싶은 곡으로 공연을 꾸며나갈 수 있습니다.
+    st.write("""기타하나는 어쿠스틱 통기타 동아리입니다. 
+            주로 정기공연, 버스킹 등의 행사를 진행하고 기타 뿐만 아니라 키보드, 드럼, 일렉, 베이스 등 여러가지 악기를 다루며 자신이 하고 싶은 곡으로 공연을 꾸며나갈 수 있습니다. 
             또한 신입생들을 위해 동아리 내부에서 기타교실을 운영하기 때문에 기타에 자신이 없어도 동아리에 들어와서 배워나갈 수 있습니다.""")
 
 elif st.session_state['current_view'] == '동아리 일정':
@@ -71,8 +71,9 @@ elif st.session_state['current_view'] == '동아리 일정':
     st.subheader("🎧 셋리스트 신청")
     
     if st.session_state['auth_level'] == 'none':
-        st.info("🔒 셋리스트 신청은 기존 부원 전용 기능입니다.")
+        st.info("🔒 셋리스트 신청 및 확인은 기존 부원 전용 기능입니다.")
     else:
+        # 셋리스트 신청 폼
         song_name = st.text_input("곡 제목", placeholder="예: Marigold")
         artist = st.text_input("아티스트", placeholder="예: Aimyon")
         
@@ -105,12 +106,40 @@ elif st.session_state['current_view'] == '동아리 일정':
                     st.error(f"오류: {e}")
             else:
                 st.warning("입력 항목을 확인해 주세요.")
+        
+        st.write("---")
+        
+        # 신청된 셋리스트 목록 확인 기능
+        st.subheader("📋 현재 신청된 셋리스트")
+        try:
+            response = supabase.table("setlists").select("*").order("created_at", desc=True).execute()
+            setlists_data = response.data
+            
+            if setlists_data:
+                formatted_data = []
+                for row in setlists_data:
+                    # 세션 JSON 데이터를 읽기 편한 문자열로 변환
+                    sessions_str = ", ".join([f"{s['role']}({s['name'] if s['name'] else '미정'})" for s in row['sessions']])
+                    
+                    formatted_data.append({
+                        "곡 제목": row['song_name'],
+                        "아티스트": row['artist'],
+                        "세션 구성": sessions_str,
+                        "신청 일시": row['created_at']
+                    })
+                    
+                df_setlists = pd.DataFrame(formatted_data)
+                df_setlists['신청 일시'] = pd.to_datetime(df_setlists['신청 일시']).dt.strftime('%Y-%m-%d %H:%M')
+                st.dataframe(df_setlists, use_container_width=True, hide_index=True)
+            else:
+                st.info("아직 신청된 셋리스트가 없습니다.")
+        except Exception as e:
+            st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
 
 # 📝 4. 신입부원 모집
 elif st.session_state['current_view'] == '신입부원 모집':
     st.subheader("📝 신입부원 모집")
     
-    # 4-1. 일반 사용자 화면 (지원서 제출 폼 - 항상 상단에 표시)
     available_interview_slots = [
         "9월 4일 (수) 18:00 - 18:30", "9월 4일 (수) 18:30 - 19:00",
         "9월 5일 (목) 18:00 - 18:30", "9월 5일 (목) 18:30 - 19:00",
@@ -146,13 +175,11 @@ elif st.session_state['current_view'] == '신입부원 모집':
             else:
                 st.warning("⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
 
-    # 4-2. 👑 운영진 권한일 때만 폼 하단에 나타나는 전체 데이터 및 배정 시스템
     if st.session_state['auth_level'] == 'admin':
         st.divider()
         st.subheader("지원서 현황 및 면접 배정 관리")
         
         try:
-            # 전체 데이터 불러오기
             response = supabase.table("applicants").select("*, interview_slots(interview_time)").order("created_at", desc=True).execute()
             data = response.data
             
@@ -168,30 +195,25 @@ elif st.session_state['current_view'] == '신입부원 모집':
                         "면접 가능 시간": ", ".join(slots) if slots else "선택 안함",
                         "지원 사유": row['motive'],
                         "접수 일시": row['created_at'],
-                        "slots_raw": slots, # 알고리즘 연산용 숨김 데이터
-                        "slot_count": len(slots) # 정렬용 숨김 데이터
+                        "slots_raw": slots,
+                        "slot_count": len(slots)
                     })
                 
-                # 1. 전체 지원서 표출 (Raw 데이터)
                 st.write(f"##### 전체 지원서 목록 (총 {len(app_list)}명)")
                 df_all = pd.DataFrame(app_list)
                 
-                # 화면에 보여줄 때는 알고리즘 연산용 숨김 데이터(slots_raw, slot_count) 컬럼을 제거
                 df_display = df_all.drop(columns=['slots_raw', 'slot_count'])
                 df_display['접수 일시'] = pd.to_datetime(df_display['접수 일시']).dt.strftime('%Y-%m-%d %H:%M')
                 st.dataframe(df_display, use_container_width=True, hide_index=True)
                 
                 st.write("")
                 
-                # 2. 면접 시간 자동 배정 알고리즘 실행 버튼
-                if st.button("면접 시간 자동 배정)", type="primary"):
+                if st.button("면접 시간 자동 배정", type="primary"):
                     st.session_state['show_greedy_result'] = True
                 
-                # 3. 배정 결과 표출 (버튼을 누른 상태 유지)
                 if st.session_state['show_greedy_result']:
                     st.write("##### 면접 시간 자동 배정 결과")
                     
-                    # 선택지가 가장 적은 지원자부터 정렬
                     sorted_apps = sorted(app_list, key=lambda x: x['slot_count'])
                     
                     assigned_times = {} 
@@ -247,15 +269,14 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
         st.success(f"인증 완료: {'운영진' if st.session_state['auth_level'] == 'admin' else '일반 부원'} 모드")
         
         if st.session_state['auth_level'] == 'member':
-            st.write("상단의 **[동아리 일정]** 탭으로 이동하시면 셋리스트를 신청하실 수 있습니다.")
+            st.write("상단의 **[동아리 일정]** 탭으로 이동하시면 셋리스트를 신청하고 확인하실 수 있습니다.")
         elif st.session_state['auth_level'] == 'admin':
-            st.write("상단의 **[동아리 일정]** 탭에서 셋리스트를 신청할 수 있습니다.")
+            st.write("상단의 **[동아리 일정]** 탭에서 셋리스트를 신청하고 확인할 수 있습니다.")
             st.write("상단의 **[신입부원 모집]** 탭에서 접수된 지원서 확인 및 면접 배정이 가능합니다.")
             
         st.divider()
         if st.button("로그아웃"):
             st.session_state['auth_level'] = 'none'
-            # 로그아웃 시 배정 결과 보기 상태도 초기화
             st.session_state['show_greedy_result'] = False 
             st.rerun()
 
