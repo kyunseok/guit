@@ -48,7 +48,7 @@ if st.button("동아리 일정", use_container_width=True):
     st.session_state['current_view'] = '동아리 일정'
 if st.button("신입부원 모집", use_container_width=True): 
     st.session_state['current_view'] = '신입부원 모집'
-if st.button("🎸 기존부원 대시보드", use_container_width=True): 
+if st.button("기존부원 대시보드", use_container_width=True): 
     st.session_state['current_view'] = '기존부원 대시보드'
 
 st.markdown("---")
@@ -68,7 +68,7 @@ elif st.session_state['current_view'] == '동아리 일정':
     st.subheader("🎧 셋리스트 신청")
     
     if st.session_state['auth_level'] == 'none':
-        st.info("🔒 셋리스트 신청은 기존 부원 전용 기능입니다. 메뉴의 **[기존부원 대시보드]**에서 로그인해 주세요.")
+        st.info("🔒 셋리스트 신청은 기존 부원 전용 기능입니다.")
     else:
         song_name = st.text_input("곡 제목", placeholder="예: Marigold")
         artist = st.text_input("아티스트", placeholder="예: Aimyon")
@@ -146,7 +146,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
     # 4-2. 👑 운영진 권한일 때만 폼 하단에 나타나는 전체 데이터 및 배정 시스템
     if st.session_state['auth_level'] == 'admin':
         st.divider()
-        st.subheader("👑 [운영진 전용] 접수 현황 및 면접 배정")
+        st.subheader("지원서 현황 및 면접 배정 관리")
         
         try:
             # 전체 데이터 불러오기
@@ -170,7 +170,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                     })
                 
                 # 1. 전체 지원서 표출 (Raw 데이터)
-                st.write(f"##### 📊 전체 지원서 목록 (총 {len(app_list)}명)")
+                st.write(f"##### 전체 지원서 목록 (총 {len(app_list)}명)")
                 df_all = pd.DataFrame(app_list)
                 
                 # 화면에 보여줄 때는 알고리즘 연산용 숨김 데이터(slots_raw, slot_count) 컬럼을 제거
@@ -181,12 +181,12 @@ elif st.session_state['current_view'] == '신입부원 모집':
                 st.write("")
                 
                 # 2. 면접 시간 자동 배정 알고리즘 실행 버튼
-                if st.button("🤖 면접 시간 자동 배정 (Greedy 알고리즘)", type="primary"):
+                if st.button("면접 시간 자동 배정)", type="primary"):
                     st.session_state['show_greedy_result'] = True
                 
                 # 3. 배정 결과 표출 (버튼을 누른 상태 유지)
                 if st.session_state['show_greedy_result']:
-                    st.write("##### ✨ 면접 시간 자동 배정 결과")
+                    st.write("##### 면접 시간 자동 배정 결과")
                     
                     # 선택지가 가장 적은 지원자부터 정렬
                     sorted_apps = sorted(app_list, key=lambda x: x['slot_count'])
@@ -213,7 +213,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                     
                     csv = result_df.to_csv(index=False).encode('utf-8-sig')
                     st.download_button(
-                        label="📥 배정 결과 다운로드 (CSV)",
+                        label="배정 결과 다운로드 (CSV)",
                         data=csv,
                         file_name='면접배정결과.csv',
                         mime='text/csv',
@@ -228,7 +228,7 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
     st.subheader("🎸 기존부원 대시보드")
     
     if st.session_state['auth_level'] == 'none':
-        st.info("부원 또는 운영진 비밀번호를 입력해 주세요.")
+        st.info("비밀번호를 입력해 주세요.")
         pwd_input = st.text_input("비밀번호", type="password") 
         if st.button("잠금 해제"):
             if pwd_input == st.secrets["admin"]["password"]:
