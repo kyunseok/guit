@@ -297,18 +297,42 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
     st.subheader("🎸 기존부원 대시보드")
     
     if st.session_state['auth_level'] == 'none':
-        st.info("비밀번호를 입력해 주세요.")
-        pwd_input = st.text_input("비밀번호", type="password", max_chars=30) 
-        if st.button("잠금 해제"):
-            if pwd_input == st.secrets["admin"]["password"]:
-                st.session_state['auth_level'] = 'admin'
-                st.rerun()
-            elif pwd_input == st.secrets["member"]["password"]:
-                st.session_state['auth_level'] = 'member'
-                st.rerun()
-            else:
-                st.error("비밀번호가 틀렸습니다.")
-                
+        # 1. 쿠키 매니저 초기화
+        cookie_manager = stx.CookieManager()
+        
+        # 2. 현재 실패 횟수 가져오기 (없으면 0으로 시작)
+        # 스트림릿 특성상 쿠키를 읽어오는 데 아주 짧은 딜레이가 있어 예외 처리를 합니다.
+        failed_attempts = cookie_manager.get(cookie="fail_count")
+        if failed_attempts is None:
+            failed_attempts = 0
+        else:
+            failed_attempts = int(failed_attempts)
+            
+        # 3. 5회 이상 실패 시 입력창 숨기고 에러 메시지 고정
+        if failed_attempts >= 5:
+            st.error("🔒 로그인 시도를 5회 연속 실패하여 브라우저 접근이 일시 차단되었습니다.")
+            st.warning("비밀번호를 잊으셨다면 관리자에게 문의해 주세요.")
+            
+        # 4. 5회 미만일 때만 입력창 띄우기
+        else:
+            st.info("비밀번호를 입력해 주세요.")
+            pwd_input = st.text_input("비밀번호", type="password", max_chars=30) 
+            
+            if st.button("잠금 해제"):
+                if pwd_input == st.secrets["admin"]["password"]:
+                    cookie_manager.delete("fail_count") # 성공 시 실패 기록 초기화
+                    st.session_state['auth_level'] = 'admin'
+                    st.rerun()
+                elif pwd_input == st.secrets["member"]["password"]:
+                    cookie_manager.delete("fail_count") # 성공 시 실패 기록 초기화
+                    st.session_state['auth_level'] = 'member'
+                    st.rerun()
+                else:
+                    # 실패 시 쿠키에 +1 누적 (유효기간: 1시간 = 3600초)
+                    new_fails = failed_attempts + 1
+                    cookie_manager.set("fail_count", new_fails, max_age=3600)
+                    st.error(f"비밀번호가 틀렸습니다. (실패 횟수: {new_fails}/5)")
+                    
     else:
         st.success(f"인증 완료: {'회장단' if st.session_state['auth_level'] == 'admin' else '부원'}")
         
