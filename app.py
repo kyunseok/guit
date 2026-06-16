@@ -78,9 +78,9 @@ elif st.session_state['current_view'] == '동아리 일정':
     if st.session_state['auth_level'] == 'none':
         st.info("🔒 셋리스트 신청 및 확인은 기존 부원 전용 기능입니다.")
     else:
-        # 셋리스트 신청 폼
-        song_name = st.text_input("곡 제목", placeholder="예: Marigold")
-        artist = st.text_input("아티스트", placeholder="예: Aimyon")
+        # 셋리스트 신청 폼 (max_chars 적용)
+        song_name = st.text_input("곡 제목", placeholder="예: Marigold", max_chars=50)
+        artist = st.text_input("아티스트", placeholder="예: Aimyon", max_chars=50)
         
         session_types = ["보컬", "통기타", "일렉", "베이스", "드럼", "키보드", "퍼커션", "기타"]
         for i, session in enumerate(st.session_state['setlist_sessions']):
@@ -88,7 +88,8 @@ elif st.session_state['current_view'] == '동아리 일정':
             with c1:
                 session['role'] = st.selectbox("세션 구분", session_types, index=session_types.index(session['role']) if session['role'] in session_types else 0, key=f"role_{session['id']}")
             with c2:
-                session['name'] = st.text_input("희망 부원 (선택)", value=session['name'], placeholder="이름 입력", key=f"name_{session['id']}")
+                # 이름 입력란 길이 제한
+                session['name'] = st.text_input("희망 부원 (선택)", value=session['name'], placeholder="이름 입력", key=f"name_{session['id']}", max_chars=10)
             with c3:
                 st.write("") 
                 if st.button("❌", key=f"del_{session['id']}"):
@@ -123,7 +124,6 @@ elif st.session_state['current_view'] == '동아리 일정':
             if setlists_data:
                 formatted_data = []
                 for row in setlists_data:
-                    # 세션 JSON 데이터를 읽기 편한 문자열로 변환
                     sessions_str = ", ".join([f"{s['role']}({s['name'] if s['name'] else '미정'})" for s in row['sessions']])
                     
                     formatted_data.append({
@@ -157,10 +157,11 @@ elif st.session_state['current_view'] == '신입부원 모집':
         ]
         
         with st.form("recruitment_form", clear_on_submit=True):
-            name = st.text_input("이름")
-            student_id = st.text_input("학번")
-            phone = st.text_input("연락처")
-            motive = st.text_area("지원 사유", placeholder="기타하나에 지원하게 된 동기를 자유롭게 적어주세요.")
+            # 악의적 입력 방지를 위한 글자 수 제한 (max_chars 적용)
+            name = st.text_input("이름", max_chars=10)
+            student_id = st.text_input("학번", max_chars=20)
+            phone = st.text_input("연락처", max_chars=15)
+            motive = st.text_area("지원 사유", placeholder="기타하나에 지원하게 된 동기를 자유롭게 적어주세요.", max_chars=1000)
             
             st.write("---")
             st.write("📅 **면접 가능 일정 선택 (복수 선택 가능)**")
@@ -176,7 +177,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                             new_app_id = str(random.randint(1000, 9999))
                             check_dup = supabase.table("applicants").select("id").eq("id", new_app_id).execute()
                             if not check_dup.data:
-                                break # 중복이 없으면 반복문 탈출
+                                break 
                         
                         # 1. 지원자 기본 정보 저장 (ID 포함)
                         supabase.table("applicants").insert({
@@ -207,7 +208,6 @@ elif st.session_state['current_view'] == '신입부원 모집':
                         app_data = response.data[0]
                         st.success(f"✅ {app_data['name']}님의 지원서는 다음과 같습니다.")
                         
-                        # 읽기 전용으로 출력
                         st.write(f"**학번:** {app_data['student_id']}")
                         st.write(f"**연락처:** {app_data['phone']}")
                         st.write(f"**지원 사유:**\n> {app_data['motive']}")
@@ -303,7 +303,8 @@ elif st.session_state['current_view'] == '기존부원 대시보드':
     
     if st.session_state['auth_level'] == 'none':
         st.info("비밀번호를 입력해 주세요.")
-        pwd_input = st.text_input("비밀번호", type="password") 
+        # 비밀번호 입력란 길이 제한 (max_chars 적용)
+        pwd_input = st.text_input("비밀번호", type="password", max_chars=30) 
         if st.button("잠금 해제"):
             if pwd_input == st.secrets["admin"]["password"]:
                 st.session_state['auth_level'] = 'admin'
