@@ -6,6 +6,31 @@ from supabase import create_client, Client
 # 페이지 기본 설정
 st.set_page_config(page_title="기타하나", page_icon="🎸", layout="centered")
 
+# Font Awesome 아이콘 팩을 불러오는 HTML 링크
+st.markdown('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">', unsafe_allow_html=True)
+
+# 커스텀 버튼 스타일 정의
+button_html = """
+<div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 2rem;">
+    <a href="http://www.youtube.com/@guitarhanapostech" target="_blank" style="color: #FF0000; font-size: 2.5rem; text-decoration: none;">
+        <i class="fa-brands fa-youtube"></i>
+    </a>
+    <a href="https://www.instagram.com/postech_guitarhana" target="_blank" style="color: #E1306C; font-size: 2.5rem; text-decoration: none;">
+        <i class="fa-brands fa-instagram"></i>
+    </a>
+</div>
+"""
+st.markdown(button_html, unsafe_allow_html=True)
+
+st.markdown("<h1 style='text-align: center; font-size: 4rem; margin-bottom: 0.5rem;'>기타하나</h1>", unsafe_allow_html=True)
+
+# 로고 이미지를 중앙 정렬하여 배치 (width로 크기 조절 가능)
+col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
+with col_img2:
+    st.image("guitLogo.png", use_container_width=True) # 또는 웹상의 이미지 URL 입력
+
+###
+
 # Supabase 클라이언트 초기화 (service_role 키 사용 중)
 url: str = st.secrets["supabase"]["url"]
 key: str = st.secrets["supabase"]["key"]
