@@ -16,10 +16,15 @@ VIEWS = ("동아리 소개", "동아리 일정", "신입부원 모집")
 def render_schedule():
     st.subheader("📅 동아리 일정")
     # 기존 일정 문구를 유지했습니다. 일정이 바뀌면 이 부분을 수정하세요.
-    st.write("- **8월 23일 - 9월 2일:** 26년도 2학기 신입부원 모집")
-    st.write("- **9월 6일 - 9월 8일:** 26년도 2학기 신입부원 면접")
-    st.write("- **9월 9일:** 2학기 개강총회")
-    st.write("- **9월 12일:** 2학기 엠티")
+    st.write("- **6주차:** 깉보 전체 미팅(10/12), 정모3(10/15)")
+    st.write("- **7주차:** 26년도 2학기 신입부원 면접")
+    st.write("- **8주차:** 중간고사")
+    st.write("- **9주차:** 정모4(11/6)")
+    st.write("- **10주차:** 깉보 1차 리허설(11/9), 깉보 직전 리허설(11/11), 깉보 공연(11/12), 정모5(11/13), 스타디움(11/14)")
+    st.write("- **11주차:** 내부공연(11/20)")
+    st.write("- **12주차:** 홈커밍 리허설(11/26), 정모6(11/27), 홈커밍(11/28)")
+    st.write("- **13주차:** 정모7(12/4)")
+    st.write("- **14주차:** 정기 1차 리허설(12/7), 정기 직전 리허설(12/10), 정기 공연(12/11), 종강총회(12/11)")
 
     st.divider()
     st.subheader("🗓️ 일정 달력")
@@ -34,7 +39,7 @@ def render_schedule():
     else:
         try:
             calendar_bytes = calendar.read_bytes()
-            st.image(calendar_bytes, caption="기타하나 일정 달력", width="stretch")
+            st.image(calendar_bytes, caption="2학기 일정", width="stretch")
             image_mime = {
                 ".png": "image/png", ".jpg": "image/jpeg",
                 ".jpeg": "image/jpeg", ".webp": "image/webp",
@@ -129,8 +134,7 @@ if st.session_state['current_view'] == '동아리 소개':
             또한 신입생들을 위해 동아리 내부에서 기타교실을 운영하기 때문에 기타에 자신이 없어도 동아리에 들어와서 배워나갈 수 있습니다.
             \n\n
             **Contact**
-            회장: 경규헌(gyuheon0117@postech.ac.kr)
-            웹사이트 관련 문제: 김윤석(kyunseok@postech.ac.kr)""")
+            김윤석(kyunseok@postech.ac.kr)""")
 
 elif st.session_state['current_view'] == '동아리 일정':
     render_schedule()
