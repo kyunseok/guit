@@ -1,0 +1,135 @@
+name: Keep Streamlit and Supabase Active
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-streamlit-and-supabase-active
+  cancel-in-progress: false
+
+jobs:
+  streamlit:
+    name: Check Streamlit app
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      STREAMLIT_URL: ${{ secrets.STREAMLIT_URL }}
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install browser
+        run: |
+          python -m pip install "playwright>=1.50,<2"
+          python -m playwright install --with-deps chromium
+      - name: Open Streamlit app
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import time
+          from urllib.parse import urlsplit
+          from playwright.sync_api import sync_playwright, Error, TimeoutError
+
+          url = os.environ.get("STREAMLIT_URL", "").strip()
+          parsed = urlsplit(url)
+          if parsed.scheme != "https" or not parsed.hostname:
+              raise SystemExit("Set STREAMLIT_URL to the public HTTPS app URL.")
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              page = browser.new_page()
+              page.set_default_timeout(3000)
+              try:
+                  page.goto(url, wait_until="domcontentloaded", timeout=60000)
+              except TimeoutError:
+                  print("Initial navigation is slow; waiting for the app.")
+
+              deadline = time.monotonic() + 180
+              ready = False
+              wake_clicked = False
+              while time.monotonic() < deadline and not ready:
+                  for frame in page.frames:
+                      try:
+                          menu = frame.get_by_role("button", name="동아리 소개", exact=True)
+                          if menu.count() and menu.first.is_visible():
+                              menu.first.click()
+                              frame.get_by_role("heading", name="🎸 동아리 소개", exact=True).wait_for(
+                                  state="visible", timeout=10000
+                              )
+                              ready = True
+                              break
+                          wake = frame.get_by_role(
+                              "button", name=re.compile(r"Yes, get this app back up!?", re.I)
+                          )
+                          if not wake_clicked and wake.count() and wake.first.is_visible():
+                              wake.first.click()
+                              wake_clicked = True
+                              print("Requested app wake-up.")
+                      except Error:
+                          continue
+                  if not ready:
+                      page.wait_for_timeout(2000)
+
+              if not ready:
+                  browser.close()
+                  raise SystemExit("Streamlit app did not become ready. Check the URL and app manually.")
+              page.wait_for_timeout(10000)
+              browser.close()
+              print("Streamlit OK: introduction page loaded.")
+          PY
+
+  supabase:
+    name: Check Supabase database
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Query health-check table
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import time
+          from urllib.error import HTTPError, URLError
+          from urllib.parse import urlsplit
+          from urllib.request import Request, urlopen
+
+          url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
+          key = os.environ.get("SUPABASE_PUBLISHABLE_KEY", "").strip()
+          parsed = urlsplit(url)
+          if parsed.scheme != "https" or not parsed.hostname:
+              raise SystemExit("Set SUPABASE_URL to the project HTTPS URL.")
+          if not key.startswith("sb_publishable_"):
+              raise SystemExit("Set SUPABASE_PUBLISHABLE_KEY to an sb_publishable_ key.")
+
+          endpoint = url + "/rest/v1/app_healthcheck?select=id&id=eq.1&limit=1"
+          for attempt in range(1, 4):
+              request = Request(endpoint, headers={"apikey": key, "Accept": "application/json"})
+              try:
+                  with urlopen(request, timeout=30) as response:
+                      data = json.load(response)
+                  if data != [{"id": 1}]:
+                      raise SystemExit("Health-check row is not visible. Check the row, grants and RLS policy.")
+                  print("Supabase OK: health-check row read successfully.")
+                  break
+              except HTTPError as exc:
+                  if exc.code < 500:
+                      raise SystemExit(f"Supabase HTTP {exc.code}. Check project status, key and table permissions.")
+                  print(f"Attempt {attempt}: Supabase HTTP {exc.code}.")
+              except (URLError, TimeoutError):
+                  print(f"Attempt {attempt}: Supabase connection failed.")
+              if attempt == 3:
+                  raise SystemExit("Supabase check failed after three attempts.")
+              time.sleep(5)
+          PY
