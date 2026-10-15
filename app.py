@@ -6,7 +6,6 @@ import string
 
 st.set_page_config(page_title="기타하나", page_icon="🎸", layout="centered")
 
-# 실행 위치와 관계없이 app.py를 기준으로 파일을 찾습니다.
 BASE_DIR = Path(__file__).resolve().parent
 MATERIALS_DIR = BASE_DIR / "materials"
 CALENDAR_DIR = BASE_DIR / "assets"
@@ -14,21 +13,7 @@ VIEWS = ("동아리 소개", "동아리 일정", "신입부원 모집")
 
 
 def render_schedule():
-    st.subheader("📅 동아리 일정")
-    # 기존 일정 문구를 유지했습니다. 일정이 바뀌면 이 부분을 수정하세요.
-    st.write("- **6주차:** 깉보 전체 미팅(10/12), 정모3(10/15), 깉교 2조 청소")
-    st.write("- **7주차:** 26년도 2학기 신입부원 면접")
-    st.write("- **8주차:** 중간고사")
-    st.write("- **9주차:** 정모4(11/6)")
-    st.write("- **10주차:** 깉보 1차 리허설(11/9), 깉보 직전 리허설(11/11), 깉보 공연(11/12), \n정모5(11/13), 스타디움(11/14), 깉교 5조 청소")
-    st.write("- **11주차:** 내부공연(11/20), 깉교 6조 청소")
-    st.write("- **12주차:** 홈커밍 리허설(11/26), 정모6(11/27), 홈커밍(11/28), 깉교 4조 청소")
-    st.write("- **13주차:** 정모7(12/4), 깉고 1조 청소")
-    st.write("- **14주차:** 정기 1차 리허설(12/7), 정기 직전 리허설(12/10), 정기 공연(12/11), 종강총회(12/11)")
-
-    st.divider()
     st.subheader("🗓️ 일정 달력")
-    # 이 목록에서 처음 발견된 사진 하나만 표시합니다.
     calendar = next((
         CALENDAR_DIR / f"calendar.{ext}"
         for ext in ("png", "jpg", "jpeg", "webp")
@@ -40,17 +25,21 @@ def render_schedule():
         try:
             calendar_bytes = calendar.read_bytes()
             st.image(calendar_bytes, caption="2학기 일정", width="stretch")
-            image_mime = {
-                ".png": "image/png", ".jpg": "image/jpeg",
-                ".jpeg": "image/jpeg", ".webp": "image/webp",
-            }[calendar.suffix]
-            st.download_button(
-                "달력 원본 다운로드", data=calendar_bytes,
-                file_name=calendar.name, mime=image_mime,
-                key="calendar_download",
-            )
         except (OSError, ValueError):
             st.error("달력 이미지를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.")
+
+    st.divider()
+    st.subheader("📅 동아리 일정")
+    st.write("- **6주차:** 깉보 전체 미팅(10/12), 정모3(10/15), 깉교 2조 청소")
+    st.write("- **7주차:** 26년도 2학기 신입부원 면접")
+    st.write("- **8주차:** 중간고사")
+    st.write("- **9주차:** 정모4(11/6)")
+    st.write("- **10주차:** 깉보 1차 리허설(11/9), 깉보 직전 리허설(11/11), 깉보 공연(11/12), \n정모5(11/13), 스타디움(11/14), 깉교 5조 청소")
+    st.write("- **11주차:** 내부공연(11/20), 깉교 6조 청소")
+    st.write("- **12주차:** 홈커밍 리허설(11/26), 정모6(11/27), 홈커밍(11/28), 깉교 4조 청소")
+    st.write("- **13주차:** 정모7(12/4), 깉고 1조 청소")
+    st.write("- **14주차:** 정기 1차 리허설(12/7), 정기 직전 리허설(12/10), 정기 공연(12/11), 종강총회(12/11)")
+
 
     st.divider()
     st.subheader("📚 정모 자료")
@@ -79,20 +68,11 @@ def render_schedule():
             )
 
 
-# 이전 화면 상태가 남아 있어도 유효한 메뉴로 돌아갑니다.
 if st.session_state.get("current_view") not in VIEWS:
     st.session_state["current_view"] = "동아리 소개"
 if "show_greedy_result" not in st.session_state:
     st.session_state["show_greedy_result"] = False
 
-# 일정 페이지에서만 본문을 넓혀 달력을 크게 표시합니다.
-if st.session_state["current_view"] == "동아리 일정":
-    st.markdown(
-        "<style>.block-container {max-width: 1200px;}</style>",
-        unsafe_allow_html=True,
-    )
-
-# 1. 헤더 및 소셜 링크 영역
 st.markdown("<h1 style='text-align: center; font-size: 4rem; margin-bottom: 0.5rem;'>기타하나</h1>", unsafe_allow_html=True)
 
 col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
@@ -113,7 +93,6 @@ button_html = """
 """
 st.markdown(button_html, unsafe_allow_html=True)
 
-# 2. 내비게이션: 비밀번호 없이 세 메뉴를 이용합니다.
 def change_view(view):
     st.session_state["current_view"] = view
 
@@ -126,7 +105,6 @@ for view in VIEWS:
 
 st.markdown("---")
 
-# 3. 화면 분기 처리
 if st.session_state['current_view'] == '동아리 소개':
     st.subheader("🎸 동아리 소개")
     st.write("""기타하나는 어쿠스틱 통기타 동아리입니다. 
@@ -139,12 +117,9 @@ if st.session_state['current_view'] == '동아리 소개':
 elif st.session_state['current_view'] == '동아리 일정':
     render_schedule()
 
-# 📝 4. 신입부원 모집
 elif st.session_state['current_view'] == '신입부원 모집':
     st.subheader("📝 신입부원 모집")
 
-    # 모집 화면에서만 Supabase를 연결합니다.
-    # 설정이 없어도 소개와 일정/PDF 페이지는 사용할 수 있습니다.
     try:
         from supabase import create_client
         config = st.secrets["supabase"]
@@ -192,7 +167,6 @@ elif st.session_state['current_view'] == '신입부원 모집':
                         
                         st.success(f"🎉 성공적으로 접수되었습니다! 본인의 지원서 코드는 [{new_app_id}] 입니다.\n원할 경우 언제든지 지원서 코드를 이용해 본인의 지원서를 조회할 수 있습니다.")
                     except Exception as e:
-                        # [변경됨] 에러 메시지에 '23505' 또는 'unique' 키워드가 포함되어 있으면 친절한 메시지로 변경
                         error_msg = str(e)
                         if '23505' in error_msg or 'unique_student_id' in error_msg:
                             st.warning("⚠️ 이미 해당 학번으로 신청한 내역이 존재합니다.")
@@ -230,7 +204,6 @@ elif st.session_state['current_view'] == '신입부원 모집':
             else:
                 st.warning("지원서 코드를 입력해 주세요.")
 
-    # 요청에 따라 전체 지원서 조회와 면접 배정을 공개합니다.
     st.divider()
     st.subheader("지원서 현황 및 면접 배정 관리")
 
@@ -302,4 +275,3 @@ elif st.session_state['current_view'] == '신입부원 모집':
             st.info("아직 접수된 지원서가 없습니다.")
     except Exception as e:
         st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
-
