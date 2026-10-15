@@ -1,18 +1,98 @@
 import streamlit as st
 import pandas as pd
-import uuid
+from pathlib import Path
 import random
 import string
-from supabase import create_client, Client
 
 st.set_page_config(page_title="기타하나", page_icon="🎸", layout="centered")
+
+# 실행 위치와 관계없이 app.py를 기준으로 파일을 찾습니다.
+BASE_DIR = Path(__file__).resolve().parent
+MATERIALS_DIR = BASE_DIR / "materials"
+CALENDAR_DIR = BASE_DIR / "assets"
+VIEWS = ("동아리 소개", "동아리 일정", "신입부원 모집")
+
+
+def render_schedule():
+    st.subheader("📅 동아리 일정")
+    # 기존 일정 문구를 유지했습니다. 일정이 바뀌면 이 부분을 수정하세요.
+    st.write("- **8월 23일 - 9월 2일:** 26년도 2학기 신입부원 모집")
+    st.write("- **9월 6일 - 9월 8일:** 26년도 2학기 신입부원 면접")
+    st.write("- **9월 9일:** 2학기 개강총회")
+    st.write("- **9월 12일:** 2학기 엠티")
+
+    st.divider()
+    st.subheader("🗓️ 일정 달력")
+    # 이 목록에서 처음 발견된 사진 하나만 표시합니다.
+    calendar = next((
+        CALENDAR_DIR / f"calendar.{ext}"
+        for ext in ("png", "jpg", "jpeg", "webp")
+        if (CALENDAR_DIR / f"calendar.{ext}").is_file()
+    ), None)
+    if calendar is None:
+        st.info("아직 등록된 달력이 없습니다.")
+    else:
+        try:
+            calendar_bytes = calendar.read_bytes()
+            st.image(calendar_bytes, caption="기타하나 일정 달력", width="stretch")
+            image_mime = {
+                ".png": "image/png", ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg", ".webp": "image/webp",
+            }[calendar.suffix]
+            st.download_button(
+                "달력 원본 다운로드", data=calendar_bytes,
+                file_name=calendar.name, mime=image_mime,
+                key="calendar_download",
+            )
+        except (OSError, ValueError):
+            st.error("달력 이미지를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.")
+
+    st.divider()
+    st.subheader("📚 정모 자료")
+    st.write("필요한 자료의 다운로드 버튼을 눌러 PDF를 저장하세요.")
+    pdf_files = sorted(
+        (p for p in MATERIALS_DIR.iterdir()
+         if p.is_file() and p.suffix.lower() == ".pdf"),
+        key=lambda p: p.name, reverse=True,
+    ) if MATERIALS_DIR.is_dir() else []
+
+    if not pdf_files:
+        st.info("아직 등록된 정모 자료가 없습니다.")
+    for pdf in pdf_files:
+        try:
+            pdf_bytes = pdf.read_bytes()
+        except OSError:
+            st.warning(f"자료를 불러올 수 없습니다: {pdf.name}")
+            continue
+        with st.container(border=True):
+            st.text(pdf.stem.replace("_", " "))
+            st.caption(f"PDF · {len(pdf_bytes) / (1024 * 1024):.2f} MB")
+            st.download_button(
+                "📥 PDF 다운로드", data=pdf_bytes,
+                file_name=pdf.name, mime="application/pdf",
+                key=f"pdf_{pdf.name}",
+            )
+
+
+# 이전 화면 상태가 남아 있어도 유효한 메뉴로 돌아갑니다.
+if st.session_state.get("current_view") not in VIEWS:
+    st.session_state["current_view"] = "동아리 소개"
+if "show_greedy_result" not in st.session_state:
+    st.session_state["show_greedy_result"] = False
+
+# 일정 페이지에서만 본문을 넓혀 달력을 크게 표시합니다.
+if st.session_state["current_view"] == "동아리 일정":
+    st.markdown(
+        "<style>.block-container {max-width: 1200px;}</style>",
+        unsafe_allow_html=True,
+    )
 
 # 1. 헤더 및 소셜 링크 영역
 st.markdown("<h1 style='text-align: center; font-size: 4rem; margin-bottom: 0.5rem;'>기타하나</h1>", unsafe_allow_html=True)
 
 col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
 with col_img2:
-    st.image("guitLogo.png", use_container_width=True)
+    st.image(str(BASE_DIR / "guitLogo.png"), width="stretch")
 
 st.markdown('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">', unsafe_allow_html=True)
 
@@ -28,30 +108,16 @@ button_html = """
 """
 st.markdown(button_html, unsafe_allow_html=True)
 
-# Supabase 클라이언트 초기화
-url: str = st.secrets["supabase"]["url"]
-key: str = st.secrets["supabase"]["key"]
-supabase: Client = create_client(url, key)
+# 2. 내비게이션: 비밀번호 없이 세 메뉴를 이용합니다.
+def change_view(view):
+    st.session_state["current_view"] = view
 
-# 세션 상태 초기화
-if 'current_view' not in st.session_state:
-    st.session_state['current_view'] = '동아리 소개'
-if 'auth_level' not in st.session_state:
-    st.session_state['auth_level'] = 'none' 
-if 'setlist_sessions' not in st.session_state:
-    st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
-if 'show_greedy_result' not in st.session_state:
-    st.session_state['show_greedy_result'] = False
 
-# 2. 내비게이션 버튼 영역
-if st.button("동아리 소개", use_container_width=True): 
-    st.session_state['current_view'] = '동아리 소개'
-if st.button("동아리 일정", use_container_width=True): 
-    st.session_state['current_view'] = '동아리 일정'
-if st.button("신입부원 모집", use_container_width=True): 
-    st.session_state['current_view'] = '신입부원 모집'
-if st.button("기존부원 대시보드", use_container_width=True): 
-    st.session_state['current_view'] = '기존부원 대시보드'
+for view in VIEWS:
+    st.button(
+        view, width="stretch",
+        on_click=change_view, args=(view,),
+    )
 
 st.markdown("---")
 
@@ -67,81 +133,21 @@ if st.session_state['current_view'] == '동아리 소개':
             웹사이트 관련 문제: 김윤석(kyunseok@postech.ac.kr)""")
 
 elif st.session_state['current_view'] == '동아리 일정':
-    st.subheader("📅 동아리 일정")
-    st.write("- **8월 23일 - 9월 2일:** 26년도 2학기 신입부원 모집")
-    st.write("- **9월 6일 - 9월 8일:** 26년도 2학기 신입부원 면접")
-    st.write("- **9월 9일:** 2학기 개강총회")
-    st.write("- **9월 12일:** 2학기 엠티")
-    
-    st.divider()
-    st.subheader("🎧 셋리스트 신청")
-    
-    if st.session_state['auth_level'] == 'none':
-        st.info("🔒 셋리스트 신청 및 확인은 기존 부원 전용 기능입니다.")
-    else:
-        song_name = st.text_input("곡 제목", placeholder="예: Marigold", max_chars=50)
-        artist = st.text_input("아티스트", placeholder="예: Aimyon", max_chars=50)
-        
-        session_types = ["보컬", "통기타", "일렉", "베이스", "드럼", "키보드", "퍼커션", "기타"]
-        for i, session in enumerate(st.session_state['setlist_sessions']):
-            c1, c2, c3 = st.columns([2, 3, 1]) 
-            with c1:
-                session['role'] = st.selectbox("세션 구분", session_types, index=session_types.index(session['role']) if session['role'] in session_types else 0, key=f"role_{session['id']}")
-            with c2:
-                session['name'] = st.text_input("희망 부원 (선택)", value=session['name'], placeholder="이름 입력", key=f"name_{session['id']}", max_chars=10)
-            with c3:
-                st.write("") 
-                if st.button("❌", key=f"del_{session['id']}"):
-                    st.session_state['setlist_sessions'].pop(i)
-                    st.rerun()
-                    
-        if st.button("➕ 세션 추가"):
-            st.session_state['setlist_sessions'].append({"id": str(uuid.uuid4()), "role": "통기타", "name": ""})
-            st.rerun()
-            
-        if st.button("🚀 신청하기", type="primary"):
-            if song_name and artist and len(st.session_state['setlist_sessions']) > 0:
-                try:
-                    clean_sessions = [{"role": s["role"], "name": s["name"]} for s in st.session_state['setlist_sessions']]
-                    supabase.table("setlists").insert({"song_name": song_name, "artist": artist, "sessions": clean_sessions}).execute()
-                    st.success("✅ 셋리스트 신청 완료!")
-                    st.session_state['setlist_sessions'] = [{"id": str(uuid.uuid4()), "role": "보컬", "name": ""}]
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"오류: {e}")
-            else:
-                st.warning("입력 항목을 확인해 주세요.")
-        
-        st.write("---")
-        
-        st.subheader("📋 현재 신청된 셋리스트")
-        try:
-            response = supabase.table("setlists").select("*").order("created_at", desc=True).execute()
-            setlists_data = response.data
-            
-            if setlists_data:
-                formatted_data = []
-                for row in setlists_data:
-                    sessions_str = ", ".join([f"{s['role']}({s['name'] if s['name'] else '미정'})" for s in row['sessions']])
-                    
-                    formatted_data.append({
-                        "곡 제목": row['song_name'],
-                        "아티스트": row['artist'],
-                        "세션 구성": sessions_str,
-                        "신청 일시": row['created_at']
-                    })
-                    
-                df_setlists = pd.DataFrame(formatted_data)
-                df_setlists['신청 일시'] = pd.to_datetime(df_setlists['신청 일시']).dt.strftime('%Y-%m-%d %H:%M')
-                st.dataframe(df_setlists, use_container_width=True, hide_index=True)
-            else:
-                st.info("아직 신청된 셋리스트가 없습니다.")
-        except Exception as e:
-            st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
+    render_schedule()
 
 # 📝 4. 신입부원 모집
 elif st.session_state['current_view'] == '신입부원 모집':
     st.subheader("📝 신입부원 모집")
+
+    # 모집 화면에서만 Supabase를 연결합니다.
+    # 설정이 없어도 소개와 일정/PDF 페이지는 사용할 수 있습니다.
+    try:
+        from supabase import create_client
+        config = st.secrets["supabase"]
+        supabase = create_client(config["url"], config["key"])
+    except Exception:
+        st.error("모집 기능에 연결할 수 없습니다. 운영진에게 문의해 주세요.")
+        st.stop()
     
     tab1, tab2 = st.tabs(["✍️ 지원서 작성", "🔍 제출 내역 확인"])
     
@@ -220,111 +226,76 @@ elif st.session_state['current_view'] == '신입부원 모집':
             else:
                 st.warning("지원서 코드를 입력해 주세요.")
 
-    if st.session_state['auth_level'] == 'admin':
-        st.divider()
-        st.subheader("지원서 현황 및 면접 배정 관리")
-        
-        try:
-            response = supabase.table("applicants").select("*, interview_slots(interview_time)").order("created_at", desc=True).execute()
-            data = response.data
-            
-            if data:
-                app_list = []
-                for row in data:
-                    slots = [s['interview_time'] for s in row.get('interview_slots', [])]
-                    app_list.append({
-                        "지원서코드": row['id'],
-                        "이름": row['name'], 
-                        "학번": row['student_id'], 
-                        "연락처": row['phone'],
-                        "면접 가능 시간": ", ".join(slots) if slots else "선택 안함",
-                        "지원 사유": row['motive'],
-                        "접수 일시": row['created_at'],
-                        "slots_raw": slots,
-                        "slot_count": len(slots)
+    # 요청에 따라 전체 지원서 조회와 면접 배정을 공개합니다.
+    st.divider()
+    st.subheader("지원서 현황 및 면접 배정 관리")
+
+    try:
+        response = supabase.table("applicants").select("*, interview_slots(interview_time)").order("created_at", desc=True).execute()
+        data = response.data
+
+        if data:
+            app_list = []
+            for row in data:
+                slots = [s['interview_time'] for s in row.get('interview_slots', [])]
+                app_list.append({
+                    "지원서코드": row['id'],
+                    "이름": row['name'], 
+                    "학번": row['student_id'], 
+                    "연락처": row['phone'],
+                    "면접 가능 시간": ", ".join(slots) if slots else "선택 안함",
+                    "지원 사유": row['motive'],
+                    "접수 일시": row['created_at'],
+                    "slots_raw": slots,
+                    "slot_count": len(slots)
+                })
+
+            st.write(f"##### 전체 지원서 목록 (총 {len(app_list)}명)")
+            df_all = pd.DataFrame(app_list)
+
+            df_display = df_all.drop(columns=['slots_raw', 'slot_count'])
+            df_display['접수 일시'] = pd.to_datetime(df_display['접수 일시']).dt.strftime('%Y-%m-%d %H:%M')
+            st.dataframe(df_display, width="stretch", hide_index=True)
+
+            st.write("")
+
+            if st.button("면접 시간 자동 배정", type="primary"):
+                st.session_state['show_greedy_result'] = True
+
+            if st.session_state['show_greedy_result']:
+                st.write("##### 면접 시간 자동 배정 결과")
+
+                sorted_apps = sorted(app_list, key=lambda x: x['slot_count'])
+
+                assigned_times = {} 
+                results = []
+
+                for app in sorted_apps:
+                    assigned_slot = "배정 실패 (수동 조율 필요)"
+                    for slot in app['slots_raw']:
+                        if slot not in assigned_times:
+                            assigned_times[slot] = app['이름']
+                            assigned_slot = slot
+                            break
+
+                    results.append({
+                        "이름": app['이름'], "학번": app['학번'], "연락처": app['연락처'],
+                        "배정된 시간": assigned_slot, "지원 사유": app['지원 사유']
                     })
-                
-                st.write(f"##### 전체 지원서 목록 (총 {len(app_list)}명)")
-                df_all = pd.DataFrame(app_list)
-                
-                df_display = df_all.drop(columns=['slots_raw', 'slot_count'])
-                df_display['접수 일시'] = pd.to_datetime(df_display['접수 일시']).dt.strftime('%Y-%m-%d %H:%M')
-                st.dataframe(df_display, use_container_width=True, hide_index=True)
-                
-                st.write("")
-                
-                if st.button("면접 시간 자동 배정", type="primary"):
-                    st.session_state['show_greedy_result'] = True
-                
-                if st.session_state['show_greedy_result']:
-                    st.write("##### 면접 시간 자동 배정 결과")
-                    
-                    sorted_apps = sorted(app_list, key=lambda x: x['slot_count'])
-                    
-                    assigned_times = {} 
-                    results = []
-                    
-                    for app in sorted_apps:
-                        assigned_slot = "배정 실패 (수동 조율 필요)"
-                        for slot in app['slots_raw']:
-                            if slot not in assigned_times:
-                                assigned_times[slot] = app['이름']
-                                assigned_slot = slot
-                                break
-                        
-                        results.append({
-                            "이름": app['이름'], "학번": app['학번'], "연락처": app['연락처'],
-                            "배정된 시간": assigned_slot, "지원 사유": app['지원 사유']
-                        })
-                        
-                    result_df = pd.DataFrame(results)
-                    st.success("면접 배정이 완료되었습니다!")
-                    st.dataframe(result_df, use_container_width=True, hide_index=True)
-                    
-                    csv = result_df.to_csv(index=False).encode('utf-8-sig')
-                    st.download_button(
-                        label="배정 결과 다운로드 (CSV)",
-                        data=csv,
-                        file_name='면접배정결과.csv',
-                        mime='text/csv',
-                    )
-            else:
-                st.info("아직 접수된 지원서가 없습니다.")
-        except Exception as e:
-            st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
 
-# 🎸 5. 기존부원 대시보드
-elif st.session_state['current_view'] == '기존부원 대시보드':
-    st.subheader("🎸 기존부원 대시보드")
-    
-    if st.session_state['auth_level'] == 'none':
-        st.info("비밀번호를 입력해 주세요.")
-        pwd_input = st.text_input("비밀번호", type="password", max_chars=30) 
-        
-        if st.button("잠금 해제"):
-            if pwd_input == st.secrets["admin"]["password"]:
-                st.session_state['auth_level'] = 'admin'
-                st.rerun()
-            elif pwd_input == st.secrets["member"]["password"]:
-                st.session_state['auth_level'] = 'member'
-                st.rerun()
-            else:
-                st.error("비밀번호가 틀렸습니다.")
-                
-    else:
-        st.success(f"인증 완료: {'회장단' if st.session_state['auth_level'] == 'admin' else '부원'}")
-        
-        if st.session_state['auth_level'] == 'member':
-            st.write("상단의 **[동아리 일정]** 탭으로 이동하시면 셋리스트를 신청하고 확인하실 수 있습니다.")
-        elif st.session_state['auth_level'] == 'admin':
-            st.write("상단의 **[동아리 일정]** 탭에서 셋리스트를 신청하고 확인할 수 있습니다.")
-            st.write("상단의 **[신입부원 모집]** 탭에서 접수된 지원서 확인 및 면접 배정이 가능합니다.")
-            
-        st.divider()
-        if st.button("로그아웃"):
-            st.session_state['auth_level'] = 'none'
-            st.session_state['show_greedy_result'] = False 
-            st.rerun()
+                result_df = pd.DataFrame(results)
+                st.success("면접 배정이 완료되었습니다!")
+                st.dataframe(result_df, width="stretch", hide_index=True)
 
-else:
-    st.markdown("<p style='text-align: center;'>위 버튼을 클릭하여 메뉴를 확인하세요.</p>", unsafe_allow_html=True)
+                csv = result_df.to_csv(index=False).encode('utf-8-sig')
+                st.download_button(
+                    label="배정 결과 다운로드 (CSV)",
+                    data=csv,
+                    file_name='면접배정결과.csv',
+                    mime='text/csv',
+                )
+        else:
+            st.info("아직 접수된 지원서가 없습니다.")
+    except Exception as e:
+        st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
+
