@@ -1,0 +1,1 @@
+{"name":"guitarhana-pages","private":true,"type":"module","scripts":{"build":"python3 scripts/build.py"}}

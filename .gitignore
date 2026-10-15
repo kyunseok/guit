@@ -1,0 +1,7 @@
+dist/
+__pycache__/
+*.pyc
+.streamlit/secrets.toml
+.env
+.env.*
+node_modules/
