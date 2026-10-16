@@ -1,4 +1,2 @@
-PDF 파일을 이 폴더에 넣고 커밋하세요. 하위 폴더는 검색하지 않습니다.
-배포 시 PDF 목록을 자동으로 만듭니다. 파일명 역순으로 표시합니다.
-예: 2026-10-15_정모자료.pdf
-PDF 원본 내용과 파일명은 그대로 제공합니다.
+Upload any pdf file(s) and commit.
+The list will be automatically set up.
