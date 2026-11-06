@@ -298,7 +298,7 @@ async function initialize() {
   $("application-fields").disabled = true;
   $("lookup-button").disabled = true;
   $("refresh-applicants").disabled = true;
-  const contentTask = jsonFile("data/content.json").then(renderContent).catch(() => {
+  const contentTask = jsonFile("data/content.json?v=guitar-class-20261106").then(renderContent).catch(() => {
     $("introduction").textContent = "내용을 불러올 수 없습니다. 페이지를 새로고침해 주세요.";
     message("schedule-list", "일정을 불러올 수 없습니다.", "error");
     message("guitar-class-content", "기타교실 정보를 불러올 수 없습니다. 페이지를 새로고침해 주세요.", "error");
