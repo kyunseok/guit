@@ -52,6 +52,7 @@ OUT.mkdir()
 for name in ("index.html", "styles.css", "app.js", "core.js", "guitLogo.png"):
     copy(ROOT / name, OUT / name)
 copy(ROOT / "data/content.json", OUT / "data/content.json")
+copy(ROOT / "assets/cleantheroom.png", OUT / "assets/cleantheroom.png")
 (OUT / "config.json").write_text(json.dumps({"supabaseUrl": url, "supabasePublishableKey": key}, indent=2) + "\n")
 
 calendar = None

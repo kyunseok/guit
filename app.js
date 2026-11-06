@@ -118,7 +118,7 @@ function renderGuitarClasses(groups) {
     heading.id = "guitar-class-group-" + group.id;
     card.setAttribute("aria-labelledby", heading.id);
     const header = element("div", undefined, "guitar-class-card-header");
-    header.append(heading, element("span", `청소 ${group.cleaningWeek}주차`, "cleaning-badge"));
+    header.append(heading);
     card.append(header);
     if (group.missions.length) {
       const missions = element("ul", undefined, "mission-list");
