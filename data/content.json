@@ -38,6 +38,44 @@
       "text": "정기 직전 리허설(12/10), 정기 공연(12/11), 종강총회(12/11)"
     }
   ],
+  "guitarClasses": [
+    {
+      "id": 1,
+      "name": "1조",
+      "cleaningWeek": 13,
+      "missions": ["내부 때 멘티 올세션 공연하기"]
+    },
+    {
+      "id": 2,
+      "name": "2조",
+      "cleaningWeek": 6,
+      "missions": []
+    },
+    {
+      "id": 3,
+      "name": "3조",
+      "cleaningWeek": 5,
+      "missions": []
+    },
+    {
+      "id": 4,
+      "name": "4조",
+      "cleaningWeek": 12,
+      "missions": ["멘토vs멘티 릴레이 술배틀", "영일대 폭죽놀이"]
+    },
+    {
+      "id": 5,
+      "name": "5조",
+      "cleaningWeek": 10,
+      "missions": ["보겜카", "낭만 사진 찍기", "회식하기"]
+    },
+    {
+      "id": 6,
+      "name": "6조",
+      "cleaningWeek": 11,
+      "missions": ["멘토 멘티 말 편하게 하기(존댓말 X)", "회식하기"]
+    }
+  ],
   "interviewSlots": [
     "9월 4일 (수) 18:00 - 18:30",
     "9월 4일 (수) 18:30 - 19:00",

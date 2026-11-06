@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#8B4513">
-  <meta name="description" content="기타하나 동아리 소개, 일정, 정모 자료와 신입부원 모집">
+  <meta name="description" content="기타하나 동아리 소개, 일정, 기타교실 미션과 청소 일정, 정모 자료와 신입부원 모집">
   <title>기타하나</title>
   <link rel="icon" href="guitLogo.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
@@ -27,6 +27,7 @@
       <nav class="main-nav" aria-label="주 메뉴">
         <a href="#about" data-view="about" aria-current="page">동아리 소개</a>
         <a href="#schedule" data-view="schedule">동아리 일정</a>
+        <a href="#guitar-class" data-view="guitar-class">기타교실</a>
         <a href="#recruitment" data-view="recruitment">신입부원 모집</a>
       </nav>
     </header>
@@ -46,6 +47,11 @@
         <h2>📚 정모 자료</h2>
         <p>필요한 자료의 다운로드 버튼을 눌러 PDF를 저장하세요.</p>
         <div id="materials-list" aria-live="polite"><p class="notice">자료를 불러오는 중입니다.</p></div>
+      </section>
+      <section id="guitar-class" class="view" aria-labelledby="guitar-class-title" hidden>
+        <h2 id="guitar-class-title">🎸 기타교실</h2>
+        <p>조별 남은 미션과 청소 담당 주차를 확인하세요.</p>
+        <div id="guitar-class-content" aria-live="polite"><p class="notice">기타교실 정보를 불러오는 중입니다.</p></div>
       </section>
       <section id="recruitment" class="view" aria-labelledby="recruitment-title" hidden>
         <h2 id="recruitment-title">📝 신입부원 모집</h2>

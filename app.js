@@ -110,6 +110,45 @@ async function loadMaterials() {
   } catch { message("materials-list", "자료를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.", "error"); }
 }
 
+function renderGuitarClasses(groups) {
+  const cards = element("div", undefined, "guitar-class-grid");
+  for (const group of groups) {
+    const card = element("article", undefined, "guitar-class-card");
+    const heading = element("h4", group.name);
+    heading.id = "guitar-class-group-" + group.id;
+    card.setAttribute("aria-labelledby", heading.id);
+    const header = element("div", undefined, "guitar-class-card-header");
+    header.append(heading, element("span", `청소 ${group.cleaningWeek}주차`, "cleaning-badge"));
+    card.append(header);
+    if (group.missions.length) {
+      card.append(element("p", `남은 미션 ${group.missions.length}개`, "mission-count"));
+      const missions = element("ul", undefined, "mission-list");
+      for (const mission of group.missions) missions.append(element("li", mission));
+      card.append(missions);
+    } else {
+      card.classList.add("all-clear");
+      card.append(element("p", "✓ 올클", "mission-complete"), element("p", "남은 미션 없음", "mission-count"));
+    }
+    cards.append(card);
+  }
+
+  const weeks = element("ol", undefined, "cleaning-week-grid");
+  weeks.setAttribute("aria-label", "1~16주차 청소 담당 조");
+  for (let week = 1; week <= 16; week++) {
+    const assigned = groups.filter(group => group.cleaningWeek === week);
+    const item = element("li", undefined, "cleaning-week" + (assigned.length ? " assigned" : ""));
+    item.append(
+      element("span", `${week}주차`, "cleaning-week-label"),
+      element("span", assigned.length ? assigned.map(group => group.name).join(" · ") + " 청소" : "배정 없음", "cleaning-week-group")
+    );
+    weeks.append(item);
+  }
+  $("guitar-class-content").replaceChildren(
+    element("h3", "조별 남은 미션"), cards, element("hr"),
+    element("h3", "주차별 청소 일정"), weeks
+  );
+}
+
 function renderContent(content) {
   $("introduction").textContent = content.introduction;
   for (const item of content.schedule) {
@@ -127,6 +166,8 @@ function renderContent(content) {
     label.append(input, document.createTextNode(slot));
     $("interview-slots").append(label);
   });
+  if (Array.isArray(content.guitarClasses) && content.guitarClasses.length) renderGuitarClasses(content.guitarClasses);
+  else message("guitar-class-content", "아직 등록된 기타교실 정보가 없습니다.");
 }
 
 async function refreshApplicants() {
@@ -157,7 +198,7 @@ async function refreshApplicants() {
 
 function showView(moveFocus = false) {
   const requested = location.hash.slice(1);
-  const view = ["about", "schedule", "recruitment"].includes(requested) ? requested : "about";
+  const view = ["about", "schedule", "guitar-class", "recruitment"].includes(requested) ? requested : "about";
   for (const section of document.querySelectorAll(".view")) section.hidden = section.id !== view;
   for (const link of document.querySelectorAll("[data-view]")) {
     if (link.dataset.view === view) link.setAttribute("aria-current", "page");
@@ -260,6 +301,7 @@ async function initialize() {
   const contentTask = jsonFile("data/content.json").then(renderContent).catch(() => {
     $("introduction").textContent = "내용을 불러올 수 없습니다. 페이지를 새로고침해 주세요.";
     message("schedule-list", "일정을 불러올 수 없습니다.", "error");
+    message("guitar-class-content", "기타교실 정보를 불러올 수 없습니다. 페이지를 새로고침해 주세요.", "error");
     throw new Error("CONTENT");
   });
   loadCalendar();
