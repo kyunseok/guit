@@ -121,30 +121,29 @@ function renderGuitarClasses(groups) {
     header.append(heading, element("span", `청소 ${group.cleaningWeek}주차`, "cleaning-badge"));
     card.append(header);
     if (group.missions.length) {
-      card.append(element("p", `남은 미션 ${group.missions.length}개`, "mission-count"));
       const missions = element("ul", undefined, "mission-list");
       for (const mission of group.missions) missions.append(element("li", mission));
       card.append(missions);
     } else {
-      card.classList.add("all-clear");
-      card.append(element("p", "✓ 올클", "mission-complete"), element("p", "남은 미션 없음", "mission-count"));
+      card.append(element("p", "올클", "mission-complete"));
     }
     cards.append(card);
   }
 
-  const weeks = element("ol", undefined, "cleaning-week-grid");
-  weeks.setAttribute("aria-label", "1~16주차 청소 담당 조");
+  const weeks = element("ul", undefined, "schedule-list");
+  weeks.setAttribute("aria-label", "기타교실 청소 일정");
   for (let week = 1; week <= 16; week++) {
     const assigned = groups.filter(group => group.cleaningWeek === week);
-    const item = element("li", undefined, "cleaning-week" + (assigned.length ? " assigned" : ""));
+    if (!assigned.length) continue;
+    const item = element("li");
     item.append(
-      element("span", `${week}주차`, "cleaning-week-label"),
-      element("span", assigned.length ? assigned.map(group => group.name).join(" · ") + " 청소" : "배정 없음", "cleaning-week-group")
+      element("strong", `${week}주차:`),
+      document.createTextNode(" " + assigned.map(group => "기타교실 " + group.name).join(", "))
     );
     weeks.append(item);
   }
   $("guitar-class-content").replaceChildren(
-    element("h3", "조별 남은 미션"), cards, element("hr"),
+    element("h3", "기타교실 별 남은 미션"), cards, element("hr"),
     element("h3", "주차별 청소 일정"), weeks
   );
 }
