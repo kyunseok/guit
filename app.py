@@ -13,7 +13,7 @@ VIEWS = ("동아리 소개", "동아리 일정", "신입부원 모집")
 
 
 def render_schedule():
-    st.subheader("🗓️ 일정 달력")
+    st.subheader("일정 달력")
     calendar = next((
         CALENDAR_DIR / f"calendar.{ext}"
         for ext in ("png", "jpg", "jpeg", "webp")
@@ -29,7 +29,7 @@ def render_schedule():
             st.error("달력 이미지를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.")
 
     st.divider()
-    st.subheader("📅 동아리 일정")
+    st.subheader("동아리 일정")
     st.write("- **6주차:** 깉보 전체 미팅(10/12), 정모3(10/15), 깉교 2조 청소")
     st.write("- **7주차:** ")
     st.write("- **8주차:** 중간고사")
@@ -37,14 +37,13 @@ def render_schedule():
     st.write("- **10주차:** 깉보 1차 리허설(11/9), 깉보 직전 리허설(11/11), 깉보 공연(11/12),")
     st.write("\t\t정모5(11/13), 스타디움(11/14), 깉교 5조 청소")
     st.write("- **11주차:** 내부공연(11/20), 깉교 6조 청소")
-    st.write("- **12주차:** 홈커밍 리허설(11/26 - 미확정), 정모6(11/27), 홈커밍(11/28), 깉교 4조 청소")
-    st.write("- **13주차:** 정기 1차 리허설(12/3 - 미확정), 정모7(12/4), 깉고 1조 청소")
+    st.write("- **12주차:** 동방 점검(11/23), 홈커밍 리허설(11/26), 정모6(11/27), 홈커밍(11/28), 깉교 4조 청소")
+    st.write("- **13주차:** 정기 1차 리허설(12/1), 정모7(12/4), 깉고 1조 청소")
     st.write("- **14주차:** 정기 직전 리허설(12/10), 정기 공연(12/11), 종강총회(12/11)")
 
 
     st.divider()
-    st.subheader("📚 정모 자료")
-    st.write("필요한 자료의 다운로드 버튼을 눌러 PDF를 저장하세요.")
+    st.subheader("정모 자료")
     pdf_files = sorted(
         (p for p in MATERIALS_DIR.iterdir()
          if p.is_file() and p.suffix.lower() == ".pdf"),
@@ -107,7 +106,7 @@ for view in VIEWS:
 st.markdown("---")
 
 if st.session_state['current_view'] == '동아리 소개':
-    st.subheader("🎸 동아리 소개")
+    st.subheader("동아리 소개")
     st.write("""기타하나는 어쿠스틱 통기타 동아리입니다. 
             주로 정기공연, 버스킹 등의 행사를 진행하고 기타 뿐만 아니라 키보드, 드럼, 일렉, 베이스 등 여러가지 악기를 다루며 자신이 하고 싶은 곡으로 공연을 꾸며나갈 수 있습니다. 
             또한 신입생들을 위해 동아리 내부에서 기타교실을 운영하기 때문에 기타에 자신이 없어도 동아리에 들어와서 배워나갈 수 있습니다.
@@ -119,7 +118,7 @@ elif st.session_state['current_view'] == '동아리 일정':
     render_schedule()
 
 elif st.session_state['current_view'] == '신입부원 모집':
-    st.subheader("📝 신입부원 모집")
+    st.subheader("신입부원 모집")
 
     try:
         from supabase import create_client
@@ -129,7 +128,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
         st.error("모집 기능에 연결할 수 없습니다. 운영진에게 문의해 주세요.")
         st.stop()
     
-    tab1, tab2 = st.tabs(["✍️ 지원서 작성", "🔍 제출 내역 확인"])
+    tab1, tab2 = st.tabs(["지원서 작성", "제출 내역 확인"])
     
     with tab1:
         available_interview_slots = [
@@ -145,7 +144,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
             motive = st.text_area("지원 사유", placeholder="기타하나에 지원하게 된 동기를 자유롭게 적어주세요.", max_chars=1000)
             
             st.write("---")
-            st.write("📅 **면접 가능 일정 선택 (복수 선택 가능)**")
+            st.write("**면접 가능 일정 선택 (복수 선택)**")
             selected_slots = st.multiselect("가능한 시간을 모두 선택해 주세요.", available_interview_slots)
             
             submitted = st.form_submit_button("지원서 제출하기")
@@ -166,15 +165,15 @@ elif st.session_state['current_view'] == '신입부원 모집':
                         slots_data = [{"applicant_id": new_app_id, "interview_time": slot} for slot in selected_slots]
                         supabase.table("interview_slots").insert(slots_data).execute()
                         
-                        st.success(f"🎉 성공적으로 접수되었습니다! 본인의 지원서 코드는 [{new_app_id}] 입니다.\n원할 경우 언제든지 지원서 코드를 이용해 본인의 지원서를 조회할 수 있습니다.")
+                        st.success(f"성공적으로 접수되었습니다! 본인의 지원서 코드는 [{new_app_id}] 입니다.\n원할 경우 언제든지 지원서 코드를 이용해 본인의 지원서를 조회할 수 있습니다.")
                     except Exception as e:
                         error_msg = str(e)
                         if '23505' in error_msg or 'unique_student_id' in error_msg:
-                            st.warning("⚠️ 이미 해당 학번으로 신청한 내역이 존재합니다.")
+                            st.warning("이미 해당 학번으로 신청한 내역이 존재합니다.")
                         else:
                             st.error(f"데이터 저장 중 오류가 발생했습니다: {e}")
                 else:
-                    st.warning("⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
+                    st.warning("모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.")
 
     with tab2:
         st.write("발급받은 6자리 지원서 코드를 입력하여 제출 내역을 확인할 수 있습니다.")
@@ -188,7 +187,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                     
                     if response.data:
                         app_data = response.data[0]
-                        st.success(f"✅ {app_data['name']}님의 지원서는 다음과 같습니다.")
+                        st.success(f"{app_data['name']}님의 지원서는 다음과 같습니다.")
                         
                         st.write(f"**학번:** {app_data['student_id']}")
                         st.write(f"**연락처:** {app_data['phone']}")
@@ -199,7 +198,7 @@ elif st.session_state['current_view'] == '신입부원 모집':
                         st.write(f"**접수 일시:** {pd.to_datetime(app_data['created_at']).strftime('%Y-%m-%d %H:%M')}")
                         
                     else:
-                        st.error("❌ 일치하는 지원서 코드가 없습니다.")
+                        st.error("일치하는 지원서 코드가 없습니다.")
                 except Exception as e:
                     st.error(f"조회 중 오류가 발생했습니다: {e}")
             else:
