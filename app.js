@@ -1,7 +1,9 @@
-import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=admin-layout-20261113";
+import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=concerts-20261113";
+import { fetchSetlist } from "./setlists.js?v=concerts-20261113";
 
 const $ = id => document.getElementById(id);
 const state = { api: null, applicants: [], assignments: [], initialized: false, listRequest: 0, adminPassword: "" };
+const performanceState = new Map();
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -69,6 +71,19 @@ async function loadMaterials() {
     $("materials-list").replaceChildren();
     for (const [index, file] of files.entries()) {
       const card = element("article", undefined, "material-card");
+      card.append(element("p", file.title, "material-title"));
+      if (file.url) {
+        const online = element("a", "Google Slides에서 자료 보기");
+        const url = new URL(file.url);
+        if (url.protocol !== "https:") throw new Error("LINK");
+        online.href = url.href;
+        online.target = "_blank";
+        online.rel = "noopener noreferrer";
+        const paragraph = element("p", undefined, "material-online");
+        paragraph.append(online);
+        card.append(paragraph);
+      }
+      if (!file.path) { $("materials-list").append(card); continue; }
       const link = element("a", "PDF 다운로드", "download-link");
       link.href = publicFileUrl(file.path, document.baseURI);
       link.download = file.name;
@@ -105,7 +120,7 @@ async function loadMaterials() {
         preview.inert = !expanded;
       });
       actions.append(toggle, link);
-      card.append(element("p", file.title, "material-title"), element("p", `PDF · ${(file.size / 1048576).toFixed(2)} MB`, "material-meta"), actions, preview);
+      card.append(element("p", `PDF · ${(file.size / 1048576).toFixed(2)} MB`, "material-meta"), actions, preview);
       $("materials-list").append(card);
     }
   } catch { message("materials-list", "자료를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.", "error"); }
@@ -151,17 +166,7 @@ function renderGuitarClasses(groups) {
 
 function renderContent(content) {
   $("introduction").textContent = content.introduction;
-  if (content.materialsLink?.url) {
-    try {
-      const url = new URL(content.materialsLink.url);
-      if (url.protocol !== "https:") throw new Error("LINK");
-      const link = element("a", content.materialsLink.label || "정모 자료 스프레드시트");
-      link.href = url.href;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      $("materials-link").replaceChildren(link);
-    } catch { $("materials-link").textContent = "정모 자료 링크를 확인해 주세요."; }
-  }
+  renderPerformances(content.performances || []);
   for (const item of content.schedule) {
     const li = element("li");
     li.append(element("strong", item.week + ":"), document.createTextNode(" " + item.text));
@@ -237,15 +242,121 @@ async function refreshApplicants(password = state.adminPassword) {
 }
 
 function showView(moveFocus = false) {
-  const requested = location.hash.slice(1);
-  const view = ["about", "schedule", "guitar-class", "recruitment"].includes(requested) ? requested : "about";
+  const [requested, performance] = location.hash.slice(1).split("/");
+  const view = ["about", "schedule", "guitar-class", "performances", "recruitment"].includes(requested) ? requested : "about";
   for (const section of document.querySelectorAll(".view")) section.hidden = section.id !== view;
   for (const link of document.querySelectorAll("[data-view]")) {
     if (link.dataset.view === view) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
   if (moveFocus) $("main").focus({ preventScroll: true });
+  $("performance-nav").hidden = view !== "performances";
+  if (view === "performances") showPerformance(performance);
   if (view === "recruitment" && state.initialized) refreshApplicants();
+}
+
+function renderPerformances(performances) {
+  for (const performance of performances) {
+    if (!/^[a-z-]+$/.test(performance.id)) continue;
+    const link = element("a", performance.title);
+    link.href = "#performances/" + performance.id;
+    link.dataset.performance = performance.id;
+    $("performance-nav").append(link);
+    const panel = element("section", undefined, "performance-panel");
+    panel.id = "performance-" + performance.id;
+    panel.hidden = true;
+    const title = element("h3", performance.title);
+    title.id = panel.id + "-title";
+    panel.setAttribute("aria-labelledby", title.id);
+    panel.append(title);
+    const status = element("div");
+    status.setAttribute("role", "status");
+    const data = element("div");
+    let refresh;
+    if (performance.sheetUrl) {
+      const actions = element("div", undefined, "setlist-actions");
+      const source = element("a", "원본 스프레드시트 열기");
+      source.href = performance.sheetUrl;
+      source.target = "_blank";
+      source.rel = "noopener noreferrer";
+      refresh = element("button", "새로고침");
+      refresh.type = "button";
+      refresh.addEventListener("click", () => loadSetlist(performance.id));
+      actions.append(source, refresh);
+      panel.append(actions);
+    } else status.append(element("p", "셋리스트가 아직 등록되지 않았습니다.", "notice"));
+    panel.append(status, data);
+    $("performance-panels").append(panel);
+    performanceState.set(performance.id, { ...performance, panel, status, data, refresh, loadedAt: 0, loading: false });
+  }
+  showView();
+}
+
+function showPerformance(requested) {
+  const id = performanceState.has(requested) ? requested : performanceState.keys().next().value;
+  for (const [key, item] of performanceState) item.panel.hidden = key !== id;
+  for (const link of $("performance-nav").querySelectorAll("a")) {
+    if (link.dataset.performance === id) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  }
+  const item = performanceState.get(id);
+  if (item?.sheetUrl && Date.now() - item.loadedAt > 60000) loadSetlist(id);
+}
+
+async function loadSetlist(id) {
+  const item = performanceState.get(id);
+  if (!item?.sheetUrl || item.loading) return;
+  item.loading = true;
+  item.refresh.disabled = true;
+  item.status.replaceChildren(element("p", "셋리스트를 불러오는 중입니다.", "muted"));
+  try {
+    const result = await fetchSetlist(item.sheetUrl, item.headerRow ?? 1);
+    const wrapper = element("div", undefined, "table-scroll setlist-scroll");
+    wrapper.tabIndex = 0;
+    wrapper.setAttribute("role", "region");
+    wrapper.setAttribute("aria-label", item.title + " 셋리스트");
+    const table = element("table", undefined, "setlist-table");
+    const head = element("thead"), header = element("tr"), body = element("tbody");
+    for (const label of result.headers) {
+      const th = element("th", label);
+      th.scope = "col";
+      header.append(th);
+    }
+    head.append(header);
+    for (const row of result.rows) {
+      const tr = element("tr");
+      for (const value of row) {
+        const cell = element("td");
+        if (/^https?:\/\/\S+$/.test(value)) {
+          const link = element("a", "링크 열기");
+          link.href = value;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          cell.append(link);
+        } else cell.textContent = value;
+        tr.append(cell);
+      }
+      body.append(tr);
+    }
+    table.append(head, body);
+    wrapper.append(table);
+    item.data.replaceChildren();
+    if (result.notes.length) {
+      const notes = element("aside", undefined, "setlist-notes");
+      notes.append(element("h4", "공연 안내"));
+      const list = element("ul");
+      for (const note of result.notes) list.append(element("li", note));
+      notes.append(list);
+      item.data.append(notes);
+    }
+    item.data.append(wrapper);
+    item.loadedAt = Date.now();
+    item.status.replaceChildren(element("p", result.rows.length ? "가로로 스크롤하여 전체 항목을 확인할 수 있습니다." : "아직 입력된 셋리스트가 없습니다.", "muted"));
+  } catch {
+    item.status.replaceChildren(element("p", item.loadedAt
+      ? "최신 내용을 불러오지 못해 이전 목록을 표시합니다. 새로고침하거나 원본 스프레드시트를 확인해 주세요."
+      : "셋리스트를 불러오지 못했습니다. 새로고침하거나 원본 스프레드시트를 확인해 주세요.", "notice error"));
+  } finally { item.loading = false; item.refresh.disabled = false; }
 }
 
 function showTab(name, focus = false) {
@@ -322,10 +433,6 @@ $("admin-login-form").addEventListener("submit", async event => {
   try { await refreshApplicants(password); }
   finally { $("admin-login-button").disabled = false; }
 });
-$("admin-logout").addEventListener("click", () => {
-  lockAdmin();
-  $("admin-password").focus();
-});
 $("refresh-applicants").addEventListener("click", () => refreshApplicants());
 $("assign-interviews").addEventListener("click", () => {
   if (!state.adminPassword || !state.applicants.length) return;
@@ -351,7 +458,7 @@ async function initialize() {
   $("application-fields").disabled = true;
   $("lookup-button").disabled = true;
   $("refresh-applicants").disabled = true;
-  const contentTask = jsonFile("data/content.json?v=admin-layout-20261113").then(renderContent).catch(() => {
+  const contentTask = jsonFile("data/content.json?v=concerts-20261113").then(renderContent).catch(() => {
     $("introduction").textContent = "내용을 불러올 수 없습니다. 페이지를 새로고침해 주세요.";
     message("schedule-list", "일정을 불러올 수 없습니다.", "error");
     message("guitar-class-content", "기타교실 정보를 불러올 수 없습니다. 페이지를 새로고침해 주세요.", "error");
@@ -372,4 +479,5 @@ async function initialize() {
 }
 
 initialize();
+
 

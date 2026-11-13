@@ -7,8 +7,8 @@
   <meta name="description" content="기타하나 동아리 소개, 일정, 기타교실 미션과 청소 일정, 정모 자료와 신입부원 모집">
   <title>기타하나</title>
   <link rel="icon" href="guitLogo.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=admin-layout-20261113">
-  <script type="module" src="app.js?v=admin-layout-20261113"></script>
+  <link rel="stylesheet" href="styles.css?v=concerts-20261113">
+  <script type="module" src="app.js?v=concerts-20261113"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -32,6 +32,8 @@
         <a href="#about" data-view="about" aria-current="page">동아리 소개</a>
         <a href="#schedule" data-view="schedule">동아리 일정</a>
         <a href="#guitar-class" data-view="guitar-class">기타교실</a>
+        <a href="#performances" data-view="performances">공연</a>
+        <nav id="performance-nav" class="performance-nav" aria-label="공연 선택" hidden></nav>
         <a href="#recruitment" data-view="recruitment">신입부원 모집</a>
       </nav>
     </header>
@@ -49,7 +51,6 @@
         <ul id="schedule-list" class="schedule-list"></ul>
         <hr>
         <h2>정모 자료</h2>
-        <p id="materials-link" class="materials-link muted">정모 자료 링크는 준비 중입니다.</p>
         <p>필요한 자료의 다운로드 버튼을 눌러 PDF를 저장하세요.</p>
         <div id="materials-list" aria-live="polite"><p class="notice">자료를 불러오는 중입니다.</p></div>
       </section>
@@ -60,6 +61,10 @@
         <hr>
         <h2 id="guitar-class-title">기타교실</h2>
         <div id="guitar-class-content" aria-live="polite"><p class="notice">기타교실 정보를 불러오는 중입니다.</p></div>
+      </section>
+      <section id="performances" class="view" aria-labelledby="performances-title" hidden>
+        <h2 id="performances-title">공연</h2>
+        <div id="performance-panels"></div>
       </section>
       <section id="recruitment" class="view" aria-labelledby="recruitment-title" hidden>
         <h2 id="recruitment-title">신입부원 모집</h2>
@@ -90,13 +95,12 @@
         <hr>
         <h2>지원서 현황 및 면접 배정 관리</h2>
         <form id="admin-login-form" class="admin-login">
-          <label for="admin-password">관리 비밀번호</label>
-          <input id="admin-password" type="password" autocomplete="current-password" maxlength="128" required>
-          <button id="admin-login-button" type="submit" disabled>관리 화면 열기</button>
+          <input id="admin-password" type="password" aria-label="비밀번호" autocomplete="current-password" maxlength="128" required>
+          <button id="admin-login-button" type="submit" aria-label="관리 화면 열기" disabled>&gt;</button>
         </form>
         <div id="admin-login-status" role="status" aria-live="polite"></div>
         <div id="admin-panel" hidden>
-        <div class="toolbar"><button id="refresh-applicants" type="button">목록 새로고침</button><button id="admin-logout" type="button">관리 화면 잠그기</button></div>
+        <div class="toolbar"><button id="refresh-applicants" type="button">목록 새로고침</button></div>
         <div id="applicants-status" role="status" aria-live="polite"></div>
         <div id="applicants-table"></div>
         <button id="assign-interviews" class="primary" type="button" disabled>면접 시간 자동 배정</button>
@@ -108,4 +112,5 @@
   </div>
 </body>
 </html>
+
 

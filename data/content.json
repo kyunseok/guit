@@ -1,8 +1,4 @@
 {
-  "materialsLink": {
-    "label": "정모 자료 스프레드시트",
-    "url": ""
-  },
   "introduction": "기타하나는 어쿠스틱 통기타 동아리입니다.\n주로 정기공연, 버스킹 등의 행사를 진행하고 기타 뿐만 아니라 키보드, 드럼, 일렉, 베이스 등 여러가지 악기를 다루며 자신이 하고 싶은 곡으로 공연을 꾸며나갈 수 있습니다.\n또한 신입생들을 위해 동아리 내부에서 기타교실을 운영하기 때문에 기타에 자신이 없어도 동아리에 들어와서 배워나갈 수 있습니다.",
   "schedule": [
     {
@@ -47,7 +43,9 @@
       "id": 1,
       "name": "1조",
       "cleaningWeek": 13,
-      "missions": ["내부 때 멘티 올세션 공연하기"]
+      "missions": [
+        "내부 때 멘티 올세션 공연하기"
+      ]
     },
     {
       "id": 2,
@@ -65,19 +63,29 @@
       "id": 4,
       "name": "4조",
       "cleaningWeek": 12,
-      "missions": ["멘토vs멘티 릴레이 술배틀", "영일대 폭죽놀이"]
+      "missions": [
+        "멘토vs멘티 릴레이 술배틀",
+        "영일대 폭죽놀이"
+      ]
     },
     {
       "id": 5,
       "name": "5조",
       "cleaningWeek": 10,
-      "missions": ["보겜카", "낭만 사진 찍기", "회식하기"]
+      "missions": [
+        "보겜카",
+        "낭만 사진 찍기",
+        "회식하기"
+      ]
     },
     {
       "id": 6,
       "name": "6조",
       "cleaningWeek": 11,
-      "missions": ["멘토 멘티 말 편하게 하기(존댓말 X)", "회식하기"]
+      "missions": [
+        "멘토 멘티 말 편하게 하기(존댓말 X)",
+        "회식하기"
+      ]
     }
   ],
   "interviewSlots": [
@@ -86,6 +94,54 @@
     "9월 5일 (목) 18:00 - 18:30",
     "9월 5일 (목) 18:30 - 19:00",
     "9월 6일 (금) 19:00 - 19:30"
+  ],
+  "materialLinks": [
+    {
+      "week": 10,
+      "title": "기타하나 10주차 정모",
+      "url": "https://docs.google.com/presentation/d/1-oGVc-Z0roSjd4OEEO1kbTqxZTC974uyVyCC1mofFAU/edit?usp=sharing"
+    },
+    {
+      "week": 9,
+      "title": "기타하나 9주차 정모",
+      "url": "https://docs.google.com/presentation/d/1G0KEDr-a3z0BcfMzy_Ub65d-F-DddNDknCFPkPlezNo/edit?usp=sharing"
+    },
+    {
+      "week": 6,
+      "title": "기타하나 6주차 정모",
+      "url": "https://docs.google.com/presentation/d/1lDsQO3-CjvzELFY1J_g0X8AlJjvo5RnzwftOy-9NxWA/edit?usp=sharing"
+    },
+    {
+      "week": 4,
+      "title": "기타하나 4주차 정모",
+      "url": "https://docs.google.com/presentation/d/1bz1HKCBvgxXkS5WyBKiIr25GRGhH8gOZ86h_yQ1-bsg/edit?usp=sharing"
+    },
+    {
+      "week": 1,
+      "title": "기타하나 1주차 정모",
+      "url": "https://docs.google.com/presentation/d/10d5bBWN0iqsswrwT8hknLfh-Zjr9nINkI4tD0v7ORMs/edit?usp=sharing"
+    }
+  ],
+  "performances": [
+    {
+      "id": "collaboration",
+      "title": "기타하나x보우시즈 연합공연",
+      "sheetUrl": ""
+    },
+    {
+      "id": "internal",
+      "title": "내부공연",
+      "sheetUrl": "https://docs.google.com/spreadsheets/d/1R7M9B_caN-Sc55YipQvfKVjcFdTre2_gEy8XerUCcIo/edit?usp=sharing"
+    },
+    {
+      "id": "homecoming",
+      "title": "홈커밍",
+      "sheetUrl": "https://docs.google.com/spreadsheets/d/1BQPuOGXTS17kKMDtsiKmEiPrSdefIfm9Hz8OdqfWdt8/edit?usp=sharing"
+    },
+    {
+      "id": "regular",
+      "title": "정기공연",
+      "sheetUrl": "https://docs.google.com/spreadsheets/d/1u4FfYQUXgY7jhiOj8Y02up3ikOP3l-Oq1z-WY6IVanM/edit?usp=sharing"
+    }
   ]
 }
-

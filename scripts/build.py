@@ -4,6 +4,8 @@ from pathlib import Path
 from urllib.parse import quote, urlsplit
 import base64
 import os
+import re
+import unicodedata
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "dist"
@@ -49,7 +51,7 @@ assert isinstance(content["interviewSlots"], list)
 if OUT.exists():
     shutil.rmtree(OUT)
 OUT.mkdir()
-for name in ("index.html", "styles.css", "app.js", "core.js", "guitLogo.png"):
+for name in ("index.html", "styles.css", "app.js", "core.js", "setlists.js", "guitLogo.png"):
     copy(ROOT / name, OUT / name)
 copy(ROOT / "data/content.json", OUT / "data/content.json")
 copy(ROOT / "assets/cleantheroom.png", OUT / "assets/cleantheroom.png")
@@ -73,7 +75,23 @@ if folder.is_dir():
             copy(pdf, OUT / relative)
             materials.append({"name": pdf.name, "title": pdf.stem.replace("_", " "), "path": quote(relative, safe="/"), "size": pdf.stat().st_size})
 
+links = {item["week"]: item for item in content.get("materialLinks", [])}
+matched = set()
+for material in materials:
+    title = unicodedata.normalize("NFC", material["title"])
+    week = re.search(r"(\d+)\s*주차", title) if "정모" in title else None
+    if week:
+        material["week"] = int(week.group(1))
+        if material["week"] in links:
+            material["url"] = links[material["week"]]["url"]
+            matched.add(material["week"])
+for week, item in links.items():
+    if week not in matched:
+        materials.append({"title": item["title"], "week": week, "url": item["url"]})
+materials.sort(key=lambda item: item.get("week", -1), reverse=True)
+
 for name, value in (("calendar", calendar), ("materials", materials)):
     (OUT / "data" / (name + ".json")).write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
 (OUT / ".nojekyll").touch()
-print(f"Built dist/: {len(materials)} PDF(s), calendar={'yes' if calendar else 'no'}")
+print(f"Built dist/: {sum(bool(item.get('path')) for item in materials)} PDF(s), calendar={'yes' if calendar else 'no'}")
+
