@@ -62,7 +62,7 @@ def render_schedule():
             st.text(pdf.stem.replace("_", " "))
             st.caption(f"PDF · {len(pdf_bytes) / (1024 * 1024):.2f} MB")
             st.download_button(
-                "📥 PDF 다운로드", data=pdf_bytes,
+                "PDF 다운로드", data=pdf_bytes,
                 file_name=pdf.name, mime="application/pdf",
                 key=f"pdf_{pdf.name}",
             )
