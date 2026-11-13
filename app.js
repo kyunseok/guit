@@ -1,5 +1,5 @@
-import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=concerts-20261113";
-import { fetchSetlist } from "./setlists.js?v=concerts-20261113";
+import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=tabs-20261114";
+import { fetchSetlist } from "./setlists.js?v=tabs-20261114";
 
 const $ = id => document.getElementById(id);
 const state = { api: null, applicants: [], assignments: [], initialized: false, listRequest: 0, adminPassword: "" };
@@ -73,7 +73,7 @@ async function loadMaterials() {
       const card = element("article", undefined, "material-card");
       card.append(element("p", file.title, "material-title"));
       if (file.url) {
-        const online = element("a", "Google Slides에서 자료 보기");
+        const online = element("a", "링크");
         const url = new URL(file.url);
         if (url.protocol !== "https:") throw new Error("LINK");
         online.href = url.href;
@@ -250,7 +250,11 @@ function showView(moveFocus = false) {
     else link.removeAttribute("aria-current");
   }
   if (moveFocus) $("main").focus({ preventScroll: true });
+  const hasTabs = view === "performances" || view === "recruitment";
+  $("main").classList.toggle("with-tabs", hasTabs);
+  $("side-tabs").hidden = !hasTabs;
   $("performance-nav").hidden = view !== "performances";
+  $("recruitment-nav").hidden = view !== "recruitment";
   if (view === "performances") showPerformance(performance);
   if (view === "recruitment" && state.initialized) refreshApplicants();
 }
@@ -372,7 +376,7 @@ function showTab(name, focus = false) {
 for (const name of ["apply", "lookup"]) {
   $(name + "-tab").addEventListener("click", () => showTab(name));
   $(name + "-tab").addEventListener("keydown", event => {
-    if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
       event.preventDefault();
       const next = event.key === "Home" ? "apply" : event.key === "End" ? "lookup" : name === "apply" ? "lookup" : "apply";
       showTab(next, true);
@@ -458,7 +462,7 @@ async function initialize() {
   $("application-fields").disabled = true;
   $("lookup-button").disabled = true;
   $("refresh-applicants").disabled = true;
-  const contentTask = jsonFile("data/content.json?v=concerts-20261113").then(renderContent).catch(() => {
+  const contentTask = jsonFile("data/content.json?v=tabs-20261114").then(renderContent).catch(() => {
     $("introduction").textContent = "내용을 불러올 수 없습니다. 페이지를 새로고침해 주세요.";
     message("schedule-list", "일정을 불러올 수 없습니다.", "error");
     message("guitar-class-content", "기타교실 정보를 불러올 수 없습니다. 페이지를 새로고침해 주세요.", "error");
@@ -479,5 +483,6 @@ async function initialize() {
 }
 
 initialize();
+
 
 
