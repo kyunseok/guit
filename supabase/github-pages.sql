@@ -1,24 +1,28 @@
 begin;
 
+create schema if not exists guitarhana_private;
+revoke all on schema guitarhana_private from public, anon, authenticated;
+grant usage on schema guitarhana_private to anon;
+
+create table if not exists guitarhana_private.admin_settings (
+    id integer primary key check (id = 1),
+    password_hash text not null
+);
+alter table guitarhana_private.admin_settings enable row level security;
+revoke all on table guitarhana_private.admin_settings from public, anon, authenticated;
+
 alter table public.applicants enable row level security;
 alter table public.interview_slots enable row level security;
+revoke all on table public.applicants, public.interview_slots from public, anon, authenticated;
+revoke all on sequence public.interview_slots_id_seq from public, anon, authenticated;
+drop policy if exists "Enable read access for all users" on public.applicants;
+drop policy if exists "Enable read access for all users" on public.interview_slots;
+drop policy if exists "Enable insert access for all users" on public.applicants;
+drop policy if exists "Enable insert access for all users" on public.interview_slots;
+drop policy if exists guitarhana_pages_public_read_v1 on public.applicants;
+drop policy if exists guitarhana_pages_public_read_v1 on public.interview_slots;
 
-grant usage on schema public to anon;
-grant select on table public.applicants to anon;
-grant select on table public.interview_slots to anon;
-
-do $$
-begin
-    if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'applicants' and policyname = 'guitarhana_pages_public_read_v1') then
-        create policy guitarhana_pages_public_read_v1 on public.applicants for select to anon using (true);
-    end if;
-    if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'interview_slots' and policyname = 'guitarhana_pages_public_read_v1') then
-        create policy guitarhana_pages_public_read_v1 on public.interview_slots for select to anon using (true);
-    end if;
-end;
-$$;
-
-create or replace function public.guitarhana_submit_application_v1(
+create or replace function guitarhana_private.submit_application_v1(
     p_name text,
     p_student_id text,
     p_phone text,
@@ -27,7 +31,7 @@ create or replace function public.guitarhana_submit_application_v1(
 )
 returns text
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
 declare
@@ -69,8 +73,86 @@ begin
 end;
 $$;
 
-revoke all on function public.guitarhana_submit_application_v1(text, text, text, text, text[]) from public;
+
+create or replace function guitarhana_private.lookup_application_v1(p_code text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    v_result jsonb;
+begin
+    if p_code is null or p_code !~ '^[A-Z0-9]{6}$' then
+        raise exception 'Invalid application code' using errcode = '22023';
+    end if;
+    select to_jsonb(a) || jsonb_build_object('interview_slots',
+        coalesce((select jsonb_agg(jsonb_build_object('interview_time', s.interview_time) order by s.id)
+            from public.interview_slots s where s.applicant_id = a.id), '[]'::jsonb))
+    into v_result from public.applicants a where a.id = p_code;
+    return v_result;
+end;
+$$;
+
+create or replace function guitarhana_private.admin_applicants_v1(p_password text, p_offset integer, p_limit integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    v_hash text;
+    v_rows jsonb;
+    v_total bigint;
+begin
+    if coalesce(octet_length(p_password), 0) not between 1 and 72 then
+        raise exception 'Invalid administrator password' using errcode = '42501';
+    end if;
+    select password_hash into v_hash from guitarhana_private.admin_settings where id = 1;
+    if v_hash is null or extensions.crypt(p_password, v_hash) is distinct from v_hash then
+        raise exception 'Invalid administrator password' using errcode = '42501';
+    end if;
+    if p_offset is null or p_offset < 0 or p_limit is null or p_limit not between 1 and 500 then
+        raise exception 'Invalid pagination' using errcode = '22023';
+    end if;
+    select count(*) into v_total from public.applicants;
+    select coalesce(jsonb_agg(row_data order by created_at desc, id desc), '[]'::jsonb)
+    into v_rows from (
+        select a.id, a.created_at, to_jsonb(a) || jsonb_build_object('interview_slots',
+            coalesce((select jsonb_agg(jsonb_build_object('interview_time', s.interview_time) order by s.id)
+                from public.interview_slots s where s.applicant_id = a.id), '[]'::jsonb)) as row_data
+        from public.applicants a order by a.created_at desc, a.id desc limit p_limit offset p_offset
+    ) page;
+    return jsonb_build_object('rows', v_rows, 'total', v_total);
+end;
+$$;
+
+create or replace function public.guitarhana_submit_application_v1(p_name text, p_student_id text, p_phone text, p_motive text, p_slots text[])
+returns text language sql security invoker set search_path = ''
+as $$ select guitarhana_private.submit_application_v1(p_name, p_student_id, p_phone, p_motive, p_slots); $$;
+
+create or replace function public.guitarhana_lookup_application_v1(p_code text)
+returns jsonb language sql security invoker set search_path = ''
+as $$ select guitarhana_private.lookup_application_v1(p_code); $$;
+
+create or replace function public.guitarhana_admin_applicants_v1(p_password text, p_offset integer default 0, p_limit integer default 500)
+returns jsonb language sql security invoker set search_path = ''
+as $$ select guitarhana_private.admin_applicants_v1(p_password, p_offset, p_limit); $$;
+
+revoke all on function guitarhana_private.submit_application_v1(text, text, text, text, text[]) from public, anon, authenticated;
+revoke all on function guitarhana_private.lookup_application_v1(text) from public, anon, authenticated;
+revoke all on function guitarhana_private.admin_applicants_v1(text, integer, integer) from public, anon, authenticated;
+revoke all on function public.guitarhana_submit_application_v1(text, text, text, text, text[]) from public, anon, authenticated;
+revoke all on function public.guitarhana_lookup_application_v1(text) from public, anon, authenticated;
+revoke all on function public.guitarhana_admin_applicants_v1(text, integer, integer) from public, anon, authenticated;
+
+grant execute on function guitarhana_private.submit_application_v1(text, text, text, text, text[]) to anon;
+grant execute on function guitarhana_private.lookup_application_v1(text) to anon;
+grant execute on function guitarhana_private.admin_applicants_v1(text, integer, integer) to anon;
 grant execute on function public.guitarhana_submit_application_v1(text, text, text, text, text[]) to anon;
+grant execute on function public.guitarhana_lookup_application_v1(text) to anon;
+grant execute on function public.guitarhana_admin_applicants_v1(text, integer, integer) to anon;
 
 notify pgrst, 'reload schema';
 commit;
+

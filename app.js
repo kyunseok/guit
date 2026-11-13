@@ -1,7 +1,7 @@
-import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js";
+import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=admin-layout-20261113";
 
 const $ = id => document.getElementById(id);
-const state = { api: null, applicants: [], assignments: [], initialized: false, listRequest: 0 };
+const state = { api: null, applicants: [], assignments: [], initialized: false, listRequest: 0, adminPassword: "" };
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -57,7 +57,7 @@ async function loadCalendar() {
     img.alt = "2학기 일정";
     img.addEventListener("error", () => message("calendar-container", "달력 이미지를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.", "error"));
     img.src = publicFileUrl(calendar.path, document.baseURI);
-    figure.append(img, element("figcaption", "2학기 일정"));
+    figure.append(img);
     $("calendar-container").replaceChildren(figure);
   } catch { message("calendar-container", "달력 이미지를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.", "error"); }
 }
@@ -151,6 +151,17 @@ function renderGuitarClasses(groups) {
 
 function renderContent(content) {
   $("introduction").textContent = content.introduction;
+  if (content.materialsLink?.url) {
+    try {
+      const url = new URL(content.materialsLink.url);
+      if (url.protocol !== "https:") throw new Error("LINK");
+      const link = element("a", content.materialsLink.label || "정모 자료 스프레드시트");
+      link.href = url.href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      $("materials-link").replaceChildren(link);
+    } catch { $("materials-link").textContent = "정모 자료 링크를 확인해 주세요."; }
+  }
   for (const item of content.schedule) {
     const li = element("li");
     li.append(element("strong", item.week + ":"), document.createTextNode(" " + item.text));
@@ -170,8 +181,24 @@ function renderContent(content) {
   else message("guitar-class-content", "아직 등록된 기타교실 정보가 없습니다.");
 }
 
-async function refreshApplicants() {
-  if (!state.api) return;
+function lockAdmin() {
+  state.listRequest++;
+  state.adminPassword = "";
+  state.applicants = [];
+  state.assignments = [];
+  $("admin-panel").hidden = true;
+  $("admin-login-form").hidden = false;
+  $("admin-login-form").reset();
+  $("admin-login-status").replaceChildren();
+  $("applicants-status").replaceChildren();
+  $("applicants-table").replaceChildren();
+  $("assignment-table").replaceChildren();
+  $("assignment-result").hidden = true;
+  $("assign-interviews").disabled = true;
+}
+
+async function refreshApplicants(password = state.adminPassword) {
+  if (!state.api || !password) return;
   const request = ++state.listRequest;
   $("refresh-applicants").disabled = true;
   $("assign-interviews").disabled = true;
@@ -181,8 +208,13 @@ async function refreshApplicants() {
   $("assignment-result").hidden = true;
   message("applicants-status", "지원서를 불러오는 중입니다.");
   try {
-    const rows = await state.api.list();
+    const rows = await state.api.list(password);
     if (request !== state.listRequest) return;
+    state.adminPassword = password;
+    $("admin-panel").hidden = false;
+    $("admin-login-form").hidden = true;
+    $("admin-login-form").reset();
+    $("admin-login-status").replaceChildren();
     state.applicants = rows;
     if (!rows.length) { message("applicants-status", "아직 접수된 지원서가 없습니다."); return; }
     $("applicants-status").replaceChildren(element("h3", `전체 지원서 목록 (총 ${rows.length}명)`));
@@ -192,7 +224,15 @@ async function refreshApplicants() {
       "지원 사유": row.motive, "접수 일시": formatDate(row.created_at)
     })));
     $("assign-interviews").disabled = false;
-  } catch { if (request === state.listRequest) message("applicants-status", "데이터를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.", "error"); }
+  } catch (error) {
+    if (request !== state.listRequest) return;
+    if (error.code === "42501") {
+      lockAdmin();
+      message("admin-login-status", "비밀번호가 올바르지 않습니다.", "error");
+    } else {
+      message(state.adminPassword ? "applicants-status" : "admin-login-status", "데이터를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.", "error");
+    }
+  }
   finally { if (request === state.listRequest) $("refresh-applicants").disabled = false; }
 }
 
@@ -273,15 +313,28 @@ $("lookup-form").addEventListener("submit", async event => {
   finally { $("lookup-button").disabled = false; }
 });
 
-$("refresh-applicants").addEventListener("click", refreshApplicants);
+$("admin-login-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!state.api || $("admin-login-button").disabled) return;
+  const password = $("admin-password").value;
+  $("admin-login-button").disabled = true;
+  message("admin-login-status", "비밀번호를 확인하는 중입니다.");
+  try { await refreshApplicants(password); }
+  finally { $("admin-login-button").disabled = false; }
+});
+$("admin-logout").addEventListener("click", () => {
+  lockAdmin();
+  $("admin-password").focus();
+});
+$("refresh-applicants").addEventListener("click", () => refreshApplicants());
 $("assign-interviews").addEventListener("click", () => {
-  if (!state.applicants.length) return;
+  if (!state.adminPassword || !state.applicants.length) return;
   state.assignments = assignInterviews(state.applicants);
   renderTable("assignment-table", state.assignments);
   $("assignment-result").hidden = false;
 });
 $("download-csv").addEventListener("click", () => {
-  if (!state.assignments.length) return;
+  if (!state.adminPassword || !state.assignments.length) return;
   const url = URL.createObjectURL(new Blob([csvString(state.assignments)], { type: "text/csv;charset=utf-8" }));
   const link = element("a");
   link.href = url;
@@ -298,7 +351,7 @@ async function initialize() {
   $("application-fields").disabled = true;
   $("lookup-button").disabled = true;
   $("refresh-applicants").disabled = true;
-  const contentTask = jsonFile("data/content.json?v=guitar-class-20261106").then(renderContent).catch(() => {
+  const contentTask = jsonFile("data/content.json?v=admin-layout-20261113").then(renderContent).catch(() => {
     $("introduction").textContent = "내용을 불러올 수 없습니다. 페이지를 새로고침해 주세요.";
     message("schedule-list", "일정을 불러올 수 없습니다.", "error");
     message("guitar-class-content", "기타교실 정보를 불러올 수 없습니다. 페이지를 새로고침해 주세요.", "error");
@@ -312,9 +365,11 @@ async function initialize() {
     $("application-fields").disabled = false;
     $("lookup-button").disabled = false;
     $("refresh-applicants").disabled = false;
+    $("admin-login-button").disabled = false;
   } catch { message("connection-status", "모집 기능에 연결할 수 없습니다. 운영진에게 문의해 주세요.", "error"); }
   state.initialized = true;
   if (location.hash === "#recruitment") refreshApplicants();
 }
 
 initialize();
+

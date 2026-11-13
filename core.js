@@ -84,7 +84,6 @@ export function createApi(config, transport = fetch) {
       return { data, total: Number(response.headers.get("content-range")?.split("/")[1]) };
     } finally { clearTimeout(timer); }
   }
-  const projection = "id,name,student_id,phone,motive,created_at,interview_slots(interview_time)";
   return {
     async submit(values) {
       const result = await request("rpc/guitarhana_submit_application_v1", {
@@ -98,22 +97,27 @@ export function createApi(config, transport = fetch) {
     },
     async lookup(code) {
       if (!/^[A-Z0-9]{6}$/.test(code)) throw new Error("INVALID_CODE");
-      const query = new URLSearchParams({ select: projection, id: "eq." + code, limit: "1" });
-      const result = await request("applicants?" + query);
-      if (!Array.isArray(result.data)) throw new Error("INVALID_RESPONSE");
-      return result.data[0] || null;
+      const result = await request("rpc/guitarhana_lookup_application_v1", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_code: code })
+      });
+      if (result.data !== null && (typeof result.data !== "object" || result.data.id !== code)) throw new Error("INVALID_RESPONSE");
+      return result.data;
     },
-    async list() {
+    async list(password) {
       const rows = [];
       for (let offset = 0; ; ) {
-        const query = new URLSearchParams({ select: projection, order: "created_at.desc,id.desc", limit: "500", offset: String(offset) });
-        const result = await request("applicants?" + query, { headers: { Prefer: "count=exact" } });
-        if (!Array.isArray(result.data)) throw new Error("INVALID_RESPONSE");
-        rows.push(...result.data);
-        offset += result.data.length;
-        if (!result.data.length || (Number.isFinite(result.total) ? offset >= result.total : result.data.length < 500)) break;
+        const result = await request("rpc/guitarhana_admin_applicants_v1", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ p_password: password, p_offset: offset, p_limit: 500 })
+        });
+        const page = result.data;
+        if (!Array.isArray(page?.rows) || !Number.isInteger(page.total)) throw new Error("INVALID_RESPONSE");
+        rows.push(...page.rows);
+        offset += page.rows.length;
+        if (!page.rows.length || offset >= page.total) break;
       }
       return rows;
     }
   };
 }
+
