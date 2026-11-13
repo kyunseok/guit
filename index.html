@@ -37,18 +37,18 @@
     </header>
     <main id="main" tabindex="-1">
       <section id="about" class="view" aria-labelledby="about-title">
-        <h2 id="about-title">🎸 동아리 소개</h2>
+        <h2 id="about-title">동아리 소개</h2>
         <p class="introduction" id="introduction"></p>
         <div class="contact"><strong>Contact</strong><p>김윤석(<a href="mailto:kyunseok@postech.ac.kr">kyunseok@postech.ac.kr</a>)</p></div>
       </section>
       <section id="schedule" class="view" aria-labelledby="calendar-title" hidden>
-        <h2 id="calendar-title">🗓️ 일정 달력</h2>
+        <h2 id="calendar-title">일정 달력</h2>
         <div id="calendar-container" aria-live="polite"><p class="notice">달력을 불러오는 중입니다.</p></div>
         <hr>
-        <h2>📅 동아리 일정</h2>
+        <h2>동아리 일정</h2>
         <ul id="schedule-list" class="schedule-list"></ul>
         <hr>
-        <h2>📚 정모 자료</h2>
+        <h2>정모 자료</h2>
         <p>필요한 자료의 다운로드 버튼을 눌러 PDF를 저장하세요.</p>
         <div id="materials-list" aria-live="polite"><p class="notice">자료를 불러오는 중입니다.</p></div>
       </section>
@@ -57,15 +57,15 @@
           <img src="assets/cleantheroom.png" alt="기타교실 청소 날짜와 동방 청소 방법" width="1844" height="1008">
         </figure>
         <hr>
-        <h2 id="guitar-class-title">🎸 기타교실</h2>
+        <h2 id="guitar-class-title">기타교실</h2>
         <div id="guitar-class-content" aria-live="polite"><p class="notice">기타교실 정보를 불러오는 중입니다.</p></div>
       </section>
       <section id="recruitment" class="view" aria-labelledby="recruitment-title" hidden>
-        <h2 id="recruitment-title">📝 신입부원 모집</h2>
+        <h2 id="recruitment-title">신입부원 모집</h2>
         <div id="connection-status" role="status"></div>
         <div class="tabs" role="tablist" aria-label="신입부원 모집">
-          <button id="apply-tab" role="tab" aria-selected="true" aria-controls="apply-panel" type="button">✍️ 지원서 작성</button>
-          <button id="lookup-tab" role="tab" aria-selected="false" aria-controls="lookup-panel" tabindex="-1" type="button">🔍 제출 내역 확인</button>
+          <button id="apply-tab" role="tab" aria-selected="true" aria-controls="apply-panel" type="button">지원서 작성</button>
+          <button id="lookup-tab" role="tab" aria-selected="false" aria-controls="lookup-panel" tabindex="-1" type="button">제출 내역 확인</button>
         </div>
         <div id="apply-panel" role="tabpanel" aria-labelledby="apply-tab">
           <form id="application-form">
@@ -75,7 +75,7 @@
               <label for="phone">연락처</label><input id="phone" name="phone" type="tel" maxlength="15" autocomplete="tel" required>
               <label for="motive">지원 사유</label><textarea id="motive" name="motive" maxlength="1000" rows="5" placeholder="기타하나에 지원하게 된 동기를 자유롭게 적어주세요." required></textarea>
               <hr>
-              <fieldset class="slot-options"><legend>📅 면접 가능 일정 선택 (복수 선택 가능)</legend><p class="muted">가능한 시간을 모두 선택해 주세요.</p><div id="interview-slots"></div></fieldset>
+              <fieldset class="slot-options"><legend>면접 가능 일정 선택 (복수 선택)</legend><p class="muted">가능한 시간을 모두 선택해 주세요.</p><div id="interview-slots"></div></fieldset>
               <button class="primary" type="submit">지원서 제출하기</button>
             </fieldset>
           </form>
