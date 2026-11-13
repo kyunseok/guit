@@ -69,7 +69,7 @@ async function loadMaterials() {
     $("materials-list").replaceChildren();
     for (const [index, file] of files.entries()) {
       const card = element("article", undefined, "material-card");
-      const link = element("a", "📥 PDF 다운로드", "download-link");
+      const link = element("a", "PDF 다운로드", "download-link");
       link.href = publicFileUrl(file.path, document.baseURI);
       link.download = file.name;
       link.setAttribute("aria-label", file.name + " PDF 다운로드");
@@ -236,19 +236,19 @@ $("application-form").addEventListener("submit", async event => {
   const values = Object.fromEntries(["name", "student_id", "phone", "motive"].map(key => [key, String(data.get(key) || "").trim()]));
   values.slots = data.getAll("slots");
   if (Object.values(values).some(value => !value.length)) {
-    message("submit-status", "⚠️ 모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.", "warning");
+    message("submit-status", "모든 필드와 면접 가능 일정을 최소 1개 이상 선택해 주세요.", "warning");
     return;
   }
   $("application-fields").disabled = true;
   message("submit-status", "지원서를 제출하는 중입니다.");
   try {
     const code = await state.api.submit(values);
-    message("submit-status", `🎉 성공적으로 접수되었습니다! 본인의 지원서 코드는 [${code}] 입니다.\n원할 경우 언제든지 지원서 코드를 이용해 본인의 지원서를 조회할 수 있습니다.`, "success");
+    message("submit-status", `성공적으로 접수되었습니다! 본인의 지원서 코드는 [${code}] 입니다.\n원할 경우 언제든지 지원서 코드를 이용해 본인의 지원서를 조회할 수 있습니다.`, "success");
     $("application-form").reset();
     refreshApplicants();
   } catch (error) {
     message("submit-status", error.code === "23505"
-      ? "⚠️ 이미 해당 학번으로 신청한 내역이 존재합니다."
+      ? "이미 해당 학번으로 신청한 내역이 존재합니다."
       : "데이터 저장 중 오류가 발생했습니다. 제출 내역을 확인하거나 운영진에게 문의해 주세요.", error.code === "23505" ? "warning" : "error");
   } finally { $("application-fields").disabled = false; }
 });
@@ -262,8 +262,8 @@ $("lookup-form").addEventListener("submit", async event => {
   message("lookup-result", "제출 내역을 확인하는 중입니다.");
   try {
     const row = await state.api.lookup(code);
-    if (!row) { message("lookup-result", "❌ 일치하는 지원서 코드가 없습니다.", "error"); return; }
-    message("lookup-result", `✅ ${row.name}님의 지원서는 다음과 같습니다.`, "success");
+    if (!row) { message("lookup-result", "일치하는 지원서 코드가 없습니다.", "error"); return; }
+    message("lookup-result", `${row.name}님의 지원서는 다음과 같습니다.`, "success");
     for (const [label, value] of Object.entries({ "학번": row.student_id, "연락처": row.phone, "지원 사유": row.motive, "선택한 면접 일정": slotsOf(row).join(", ") || "없음", "접수 일시": formatDate(row.created_at) })) {
       const item = element("p", undefined, "detail-row");
       item.append(element("strong", label + ": "), document.createTextNode(String(value ?? "")));
