@@ -14,3 +14,38 @@
 .mission-complete{margin:0;font-size:.85rem}
 @media(max-width:959px){.guitar-class-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:659px){.guitar-class-grid{grid-template-columns:1fr}}
+
+@keyframes view-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.view:not([hidden]), [role="tabpanel"]:not([hidden]) {
+  animation: view-enter 240ms cubic-bezier(.2,.7,.2,1);
+}
+.main-nav a, button, .download-link, .social-links a {
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+.material-card, .guitar-class-card {
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+.pdf-preview { overflow: hidden; }
+@media (hover: hover) and (pointer: fine) {
+  .main-nav a:hover, button:hover:not(:disabled), .download-link:hover, .social-links a:hover {
+    transform: translateY(-1px);
+  }
+  .material-card:hover, .guitar-class-card:hover {
+    transform: translateY(-2px);
+    border-color: #c7ab85;
+    box-shadow: 0 5px 16px rgb(62 39 35 / 7%);
+  }
+}
+.main-nav a:active, button:active:not(:disabled), .download-link:active {
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .view:not([hidden]), [role="tabpanel"]:not([hidden]) { animation: none; }
+  .main-nav a, button, .download-link, .social-links a, .material-card, .guitar-class-card {
+    transition: none;
+    transform: none;
+  }
+}
