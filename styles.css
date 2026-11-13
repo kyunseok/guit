@@ -116,11 +116,6 @@ tbody tr:last-child td { border-bottom: 0; }
 .skip-link { position: absolute; top: -80px; left: 16px; background: var(--accent); color: #fff; padding: 12px; z-index: 5; }
 .skip-link:focus { top: 8px; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
-@keyframes view-enter {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.view:not([hidden]), [role="tabpanel"]:not([hidden]) { animation: view-enter 240ms cubic-bezier(.2,.7,.2,1); }
 @media (hover: hover) and (pointer: fine) {
   .material-card:hover, .guitar-class-card:hover { border-color: var(--accent); box-shadow: 0 4px 14px rgb(133 72 25 / 6%); }
 }
@@ -140,6 +135,5 @@ tbody tr:last-child td { border-bottom: 0; }
   .material-card, .guitar-class-card { padding: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .view:not([hidden]), [role="tabpanel"]:not([hidden]) { animation: none; }
   .main-nav a, button, .download-link, input, textarea, .material-card, .guitar-class-card { transition: none; }
 }

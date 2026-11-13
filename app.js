@@ -3,40 +3,6 @@ import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, create
 const $ = id => document.getElementById(id);
 const state = { api: null, applicants: [], assignments: [], initialized: false, listRequest: 0 };
 
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-const previewAnimations = new Map();
-
-function animatePreview(preview, expanded) {
-  const current = previewAnimations.get(preview);
-  const style = getComputedStyle(preview);
-  const startHeight = preview.hidden ? 0 : preview.getBoundingClientRect().height;
-  const startOpacity = preview.hidden ? 0 : Number(style.opacity);
-  const startMargin = preview.hidden ? 0 : parseFloat(style.marginTop);
-  current?.cancel();
-  previewAnimations.delete(preview);
-  preview.hidden = false;
-  preview.inert = !expanded;
-  if (reducedMotion.matches || typeof preview.animate !== "function") {
-    preview.hidden = !expanded;
-    return;
-  }
-  const animation = preview.animate([
-    { height: startHeight + "px", opacity: startOpacity, marginTop: startMargin + "px" },
-    { height: (expanded ? preview.scrollHeight : 0) + "px", opacity: expanded ? 1 : 0, marginTop: expanded ? "18px" : "0px" }
-  ], { duration: 240, easing: "cubic-bezier(.2,.7,.2,1)", fill: "both" });
-  previewAnimations.set(preview, animation);
-  animation.onfinish = () => {
-    if (previewAnimations.get(preview) !== animation) return;
-    preview.hidden = !expanded;
-    animation.cancel();
-    previewAnimations.delete(preview);
-  };
-}
-
-reducedMotion.addEventListener("change", event => {
-  if (event.matches) for (const animation of previewAnimations.values()) animation.finish();
-});
-
 function element(tag, text, className) {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;
@@ -135,7 +101,8 @@ async function loadMaterials() {
           frame.src = link.href + "#view=FitH";
           preview.prepend(frame);
         }
-        animatePreview(preview, expanded);
+        preview.hidden = !expanded;
+        preview.inert = !expanded;
       });
       actions.append(toggle, link);
       card.append(element("p", file.title, "material-title"), element("p", `PDF · ${(file.size / 1048576).toFixed(2)} MB`, "material-meta"), actions, preview);
