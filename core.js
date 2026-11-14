@@ -85,6 +85,20 @@ export function createApi(config, transport = fetch) {
     } finally { clearTimeout(timer); }
   }
   return {
+    async feedbackList(songKey, offset = 0) {
+      if (!/^[a-f0-9]{64}$/.test(songKey) || !Number.isInteger(offset) || offset < 0) throw new Error("INVALID_FEEDBACK");
+      const query = new URLSearchParams({ select: "id,author_name,body,created_at", song_key: "eq." + songKey, order: "created_at.desc,id.desc", limit: "50", offset: String(offset) });
+      const result = await request("song_feedback?" + query, { headers: { Prefer: "count=exact" } });
+      if (!Array.isArray(result.data)) throw new Error("INVALID_RESPONSE");
+      return { rows: result.data, total: result.total };
+    },
+    async feedbackSubmit(values) {
+      try {
+        await request("song_feedback", {
+          method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(values)
+        });
+      } catch (error) { if (error.code !== "23505") throw error; }
+    },
     async submit(values) {
       const result = await request("rpc/guitarhana_submit_application_v1", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
@@ -120,4 +134,5 @@ export function createApi(config, transport = fetch) {
     }
   };
 }
+
 

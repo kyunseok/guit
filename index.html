@@ -7,8 +7,8 @@
   <meta name="description" content="기타하나 동아리 소개, 일정, 기타교실 미션과 청소 일정, 정모 자료와 신입부원 모집">
   <title>기타하나</title>
   <link rel="icon" href="guitLogo.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=tabs-20261114">
-  <script type="module" src="app.js?v=tabs-20261114"></script>
+  <link rel="stylesheet" href="styles.css?v=feedback-20261114">
+  <script type="module" src="app.js?v=feedback-20261114"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -32,12 +32,13 @@
         <a href="#about" data-view="about" aria-current="page">동아리 소개</a>
         <a href="#schedule" data-view="schedule">동아리 일정</a>
         <a href="#guitar-class" data-view="guitar-class">기타교실</a>
-        <a href="#performances" data-view="performances">공연</a>
+        <a href="#performances" data-view="performances">셋리스트</a>
         <a href="#recruitment" data-view="recruitment">신입부원 모집</a>
       </nav>
     </header>
     <main id="main" tabindex="-1">
       <aside id="side-tabs" hidden>
+        <nav id="semester-nav" class="section-tabs" aria-label="학기 선택" hidden></nav>
         <nav id="performance-nav" class="section-tabs" aria-label="공연 선택" hidden></nav>
         <div id="recruitment-nav" class="section-tabs" role="tablist" aria-orientation="vertical" hidden aria-label="신입부원 모집">
           <button id="apply-tab" role="tab" aria-selected="true" aria-controls="apply-panel" type="button">지원서 작성</button>
@@ -50,7 +51,8 @@
         <p class="introduction" id="introduction"></p>
         <div class="contact"><strong>Contact</strong><p>김윤석(<a href="mailto:kyunseok@postech.ac.kr">kyunseok@postech.ac.kr</a>)</p></div>
       </section>
-      <section id="schedule" class="view" aria-labelledby="calendar-title" hidden>
+      <section id="schedule" class="view" aria-label="동아리 일정" hidden>
+        <div id="schedule-26-2" class="semester-panel">
         <h2 id="calendar-title">일정 달력</h2>
         <div id="calendar-container" aria-live="polite"><p class="notice">달력을 불러오는 중입니다.</p></div>
         <hr>
@@ -59,17 +61,21 @@
         <hr>
         <h2>정모 자료</h2>
         <div id="materials-list" aria-live="polite"><p class="notice">자료를 불러오는 중입니다.</p></div>
+        </div>
+        <div id="schedule-27-1" class="semester-panel" hidden><h2>27-1학기 동아리 일정</h2><p class="notice">27-1학기 일정과 자료는 아직 등록되지 않았습니다.</p></div>
       </section>
-      <section id="guitar-class" class="view" aria-labelledby="guitar-class-title" hidden>
+      <section id="guitar-class" class="view" aria-label="기타교실" hidden>
+        <div id="guitar-class-26-2" class="semester-panel">
         <figure class="calendar-figure guitar-class-figure">
           <img src="assets/cleantheroom.png" alt="기타교실 청소 날짜와 동방 청소 방법" width="1844" height="1008">
         </figure>
         <hr>
         <h2 id="guitar-class-title">기타교실</h2>
         <div id="guitar-class-content" aria-live="polite"><p class="notice">기타교실 정보를 불러오는 중입니다.</p></div>
+        </div>
+        <div id="guitar-class-27-1" class="semester-panel" hidden><h2>27-1학기 기타교실</h2><p class="notice">27-1학기 기타교실 정보는 아직 등록되지 않았습니다.</p></div>
       </section>
-      <section id="performances" class="view" aria-labelledby="performances-title" hidden>
-        <h2 id="performances-title">공연</h2>
+      <section id="performances" class="view" aria-label="셋리스트" hidden>
         <div id="performance-panels"></div>
       </section>
       <section id="recruitment" class="view" aria-labelledby="recruitment-title" hidden>
@@ -113,8 +119,27 @@
     </main>
     <noscript><p class="notice">메뉴와 모집 기능을 사용하려면 브라우저에서 JavaScript를 허용해 주세요.</p></noscript>
   </div>
+  <dialog id="feedback-dialog" aria-labelledby="feedback-title">
+    <div class="feedback-header"><h2 id="feedback-title">곡 피드백</h2><button id="feedback-close" type="button" aria-label="피드백 닫기">×</button></div>
+    <p id="feedback-song" class="feedback-song"></p>
+    <p id="feedback-context" class="muted"></p>
+    <div id="feedback-status" role="status" aria-live="polite"></div>
+    <div id="feedback-list"></div>
+    <button id="feedback-more" type="button" hidden>이전 피드백 더 보기</button>
+    <hr>
+    <form id="feedback-form">
+      <fieldset id="feedback-fields" disabled>
+        <label for="feedback-author">닉네임 (선택)</label><input id="feedback-author" maxlength="30" placeholder="비워 두면 익명으로 표시됩니다." autocomplete="off">
+        <label for="feedback-body">피드백</label><textarea id="feedback-body" maxlength="1000" rows="4" required></textarea>
+        <p class="muted">작성한 피드백은 방문자에게 공개됩니다.</p>
+        <button type="submit">피드백 남기기</button>
+      </fieldset>
+    </form>
+    <div id="feedback-submit-status" role="status" aria-live="polite"></div>
+  </dialog>
 </body>
 </html>
+
 
 
 

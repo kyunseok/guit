@@ -51,7 +51,7 @@ assert isinstance(content["interviewSlots"], list)
 if OUT.exists():
     shutil.rmtree(OUT)
 OUT.mkdir()
-for name in ("index.html", "styles.css", "app.js", "core.js", "setlists.js", "guitLogo.png"):
+for name in ("index.html", "styles.css", "app.js", "core.js", "setlists.js", "feedback.js", "guitLogo.png"):
     copy(ROOT / name, OUT / name)
 copy(ROOT / "data/content.json", OUT / "data/content.json")
 copy(ROOT / "assets/cleantheroom.png", OUT / "assets/cleantheroom.png")
@@ -94,4 +94,5 @@ for name, value in (("calendar", calendar), ("materials", materials)):
     (OUT / "data" / (name + ".json")).write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
 (OUT / ".nojekyll").touch()
 print(f"Built dist/: {sum(bool(item.get('path')) for item in materials)} PDF(s), calendar={'yes' if calendar else 'no'}")
+
 
