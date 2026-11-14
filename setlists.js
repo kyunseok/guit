@@ -23,11 +23,10 @@ export function setlistTable(rows, headerRow = 1) {
   const source = rows.slice(headerRow);
   let width = 0;
   (source[0] || []).forEach((cell, index) => { if (cell.trim()) width = index + 1; });
-  if (!width || source.length < 1) return { headers: [], rows: [], notes: [] };
+  if (!width || source.length < 1) return { headers: [], rows: [] };
   return {
     headers: Array.from({ length: width }, (_, index) => source[0][index]?.trim() || (index === 0 ? "구분" : "항목 " + (index + 1))),
-    rows: source.slice(1).filter(row => row.slice(0, width).some(cell => cell.trim())).map(row => Array.from({ length: width }, (_, index) => row[index] || "")),
-    notes: [...new Set(source.slice(1).flatMap(row => row.slice(width)).map(cell => cell.trim()).filter(Boolean))]
+    rows: source.slice(1).filter(row => row.slice(0, width).some(cell => cell.trim())).map(row => Array.from({ length: width }, (_, index) => row[index] || ""))
   };
 }
 
@@ -37,6 +36,7 @@ export async function fetchSetlist(sheetUrl, headerRow = 1, transport = fetch) {
   if (url.protocol !== "https:" || url.hostname !== "docs.google.com" || !match) throw new Error("INVALID_SHEET");
   const source = new URL(`https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq`);
   source.searchParams.set("tqx", "out:csv");
+  source.searchParams.set("headers", "0");
   const gid = url.searchParams.get("gid") || new URLSearchParams(url.hash.slice(1)).get("gid");
   if (gid && /^\d+$/.test(gid)) source.searchParams.set("gid", gid);
   const controller = new AbortController();

@@ -1,5 +1,5 @@
 import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=feedback-20261114";
-import { fetchSetlist } from "./setlists.js?v=feedback-20261114";
+import { fetchSetlist } from "./setlists.js?v=sheet-tabs-20261114";
 
 import { initializeFeedback } from "./feedback.js?v=feedback-20261114";
 
@@ -246,7 +246,7 @@ async function refreshApplicants(password = state.adminPassword) {
 }
 
 function showView(moveFocus = false) {
-  const [requested, performance] = location.hash.slice(1).split("/");
+  const [requested, performance, sheet] = location.hash.slice(1).split("/");
   const view = ["about", "schedule", "guitar-class", "performances", "recruitment"].includes(requested) ? requested : "about";
   for (const section of document.querySelectorAll(".view")) section.hidden = section.id !== view;
   for (const link of document.querySelectorAll("[data-view]")) {
@@ -261,7 +261,7 @@ function showView(moveFocus = false) {
   $("recruitment-nav").hidden = view !== "recruitment";
   $("semester-nav").hidden = !["schedule", "guitar-class"].includes(view);
   if (view === "schedule" || view === "guitar-class") showSemester(view, performance);
-  if (view === "performances") showPerformance(performance, activeView !== view);
+  if (view === "performances") showPerformance(performance, activeView !== view, sheet);
   activeView = view;
   if (view === "recruitment" && state.initialized) refreshApplicants();
 }
@@ -291,27 +291,37 @@ function renderPerformances(performances) {
     const title = element("h2", performance.title);
     title.id = panel.id + "-title";
     panel.setAttribute("aria-labelledby", title.id);
-    panel.append(title);
+    const heading = element("div", undefined, "performance-heading");
+    heading.append(title);
+    panel.append(heading);
+    const sheets = performance.sheets?.length
+      ? performance.sheets.filter(sheet => /^[a-z-]+$/.test(sheet.id))
+      : [{ id: "default", title: performance.title, sheetUrl: performance.sheetUrl, headerRow: performance.headerRow, songColumn: performance.songColumn }];
+    const source = element("a", "원본 스프레드시트 열기", "setlist-source");
+    source.target = "_blank";
+    source.rel = "noopener noreferrer";
+    source.hidden = true;
+    heading.append(source);
+    const sheetNav = element("nav", undefined, "sheet-tabs");
+    sheetNav.setAttribute("aria-label", performance.title + " 시트 선택");
+    sheetNav.hidden = sheets.length < 2;
+    for (const sheet of sheets) {
+      const tab = element("a", sheet.title);
+      tab.href = "#performances/" + performance.id + "/" + sheet.id;
+      tab.dataset.sheet = sheet.id;
+      sheetNav.append(tab);
+    }
     const status = element("div");
     status.setAttribute("role", "status");
     const data = element("div");
-    if (performance.sheetUrl) {
-      const actions = element("div", undefined, "setlist-actions");
-      const source = element("a", "원본 스프레드시트 열기");
-      source.href = performance.sheetUrl;
-      source.target = "_blank";
-      source.rel = "noopener noreferrer";
-      actions.append(source);
-      panel.append(actions);
-    } else status.append(element("p", "셋리스트가 아직 등록되지 않았습니다.", "notice"));
-    panel.append(status, data);
+    panel.append(sheetNav, status, data);
     $("performance-panels").append(panel);
-    performanceState.set(performance.id, { ...performance, panel, status, data, loadedAt: 0, request: 0 });
+    performanceState.set(performance.id, { ...performance, panel, source, sheetNav, sheets, status, data, selectedSheet: "", loadedAt: 0, request: 0 });
   }
   showView();
 }
 
-function showPerformance(requested, entering = false) {
+function showPerformance(requested, entering = false, requestedSheet) {
   const id = performanceState.has(requested) ? requested : performanceState.keys().next().value;
   for (const [key, item] of performanceState) item.panel.hidden = key !== id;
   for (const link of $("performance-nav").querySelectorAll("a")) {
@@ -319,7 +329,29 @@ function showPerformance(requested, entering = false) {
     else link.removeAttribute("aria-current");
   }
   const item = performanceState.get(id);
-  if (item?.sheetUrl && (entering || activePerformance !== id || !item.loadedAt)) loadSetlist(id);
+  if (!item) return;
+  const sheet = item.sheets.find(sheet => sheet.id === requestedSheet) || item.sheets[0];
+  if (!sheet) return;
+  const changedSheet = item.selectedSheet !== sheet.id;
+  if (changedSheet) {
+    item.request++;
+    item.loadedAt = 0;
+    item.data.replaceChildren();
+    item.status.replaceChildren();
+    item.selectedSheet = sheet.id;
+    item.sheetUrl = sheet.sheetUrl;
+    item.headerRow = sheet.headerRow ?? 1;
+    item.songColumn = sheet.songColumn ?? 1;
+    item.feedbackTitle = item.sheets.length > 1 ? item.title + " · " + sheet.title : item.title;
+  }
+  item.source.hidden = !item.sheetUrl;
+  if (item.sheetUrl) item.source.href = item.sheetUrl;
+  else item.status.replaceChildren(element("p", "셋리스트가 아직 등록되지 않았습니다.", "notice"));
+  for (const tab of item.sheetNav.querySelectorAll("a")) {
+    if (tab.dataset.sheet === sheet.id) tab.setAttribute("aria-current", "page");
+    else tab.removeAttribute("aria-current");
+  }
+  if (item.sheetUrl && (entering || activePerformance !== id || changedSheet || !item.loadedAt)) loadSetlist(id);
   activePerformance = id;
 }
 
@@ -354,7 +386,7 @@ async function loadSetlist(id) {
           const song = element("button", value, "song-feedback-link");
           song.type = "button";
           song.setAttribute("aria-label", value + " 피드백 보기 및 작성");
-          song.addEventListener("click", () => openFeedback({ title: value.trim(), performance: item.title, sheetUrl: item.sheetUrl, group: songGroup }, song));
+          song.addEventListener("click", () => openFeedback({ title: value.trim(), performance: item.feedbackTitle, sheetUrl: item.sheetUrl, group: songGroup }, song));
           cell.append(song);
         } else if (/^https?:\/\/\S+$/.test(value)) {
           const link = element("a", "링크 열기");
@@ -370,14 +402,6 @@ async function loadSetlist(id) {
     table.append(head, body);
     wrapper.append(table);
     item.data.replaceChildren();
-    if (result.notes.length) {
-      const notes = element("aside", undefined, "setlist-notes");
-      notes.append(element("h3", "공연 공지"));
-      const list = element("ul");
-      for (const note of result.notes) list.append(element("li", note));
-      notes.append(list);
-      item.data.append(notes);
-    }
     item.data.append(wrapper);
     item.loadedAt = Date.now();
     item.status.replaceChildren();
@@ -489,7 +513,7 @@ async function initialize() {
   $("application-fields").disabled = true;
   $("lookup-button").disabled = true;
   $("refresh-applicants").disabled = true;
-  const contentTask = jsonFile("data/content.json?v=feedback-20261114").then(renderContent).catch(() => {
+  const contentTask = jsonFile("data/content.json?v=sheet-tabs-20261114").then(renderContent).catch(() => {
     $("introduction").textContent = "내용을 불러올 수 없습니다. 페이지를 새로고침해 주세요.";
     message("schedule-list", "일정을 불러올 수 없습니다.", "error");
     message("guitar-class-content", "기타교실 정보를 불러올 수 없습니다. 페이지를 새로고침해 주세요.", "error");

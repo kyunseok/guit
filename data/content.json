@@ -141,7 +141,21 @@
     {
       "id": "regular",
       "title": "정기공연",
-      "sheetUrl": "https://docs.google.com/spreadsheets/d/1u4FfYQUXgY7jhiOj8Y02up3ikOP3l-Oq1z-WY6IVanM/edit?usp=sharing"
+      "sheetUrl": "https://docs.google.com/spreadsheets/d/1u4FfYQUXgY7jhiOj8Y02up3ikOP3l-Oq1z-WY6IVanM/edit?usp=sharing",
+      "sheets": [
+        {
+          "id": "setlist",
+          "title": "셋리스트",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1u4FfYQUXgY7jhiOj8Y02up3ikOP3l-Oq1z-WY6IVanM/edit?gid=0",
+          "headerRow": 1
+        },
+        {
+          "id": "first-rehearsal",
+          "title": "1차리허설",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1u4FfYQUXgY7jhiOj8Y02up3ikOP3l-Oq1z-WY6IVanM/edit?gid=1168274566",
+          "headerRow": 1
+        }
+      ]
     },
     {
       "id": "clubtour",
