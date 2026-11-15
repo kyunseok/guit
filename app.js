@@ -1,5 +1,6 @@
 import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=feedback-20261114";
 import { fetchSetlist } from "./setlists.js?v=sheet-tabs-20261114";
+import { initializeHomeVideo } from "./home-video.js?v=home-video-20261114";
 
 import { initializeFeedback } from "./feedback.js?v=feedback-20261114";
 
@@ -7,6 +8,7 @@ const $ = id => document.getElementById(id);
 const state = { api: null, applicants: [], assignments: [], initialized: false, listRequest: 0, adminPassword: "" };
 const performanceState = new Map();
 const openFeedback = initializeFeedback(() => state.api, formatDate);
+const showHomeVideo = initializeHomeVideo();
 let activeView = "", activePerformance = "";
 
 function element(tag, text, className) {
@@ -256,6 +258,8 @@ function showView(moveFocus = false) {
   if (moveFocus) $("main").focus({ preventScroll: true });
   const hasTabs = view !== "about";
   $("main").classList.toggle("with-tabs", hasTabs);
+  $("main").classList.toggle("with-home-video", !hasTabs);
+  showHomeVideo(view === "about");
   $("side-tabs").hidden = !hasTabs;
   $("performance-nav").hidden = view !== "performances";
   $("recruitment-nav").hidden = view !== "recruitment";

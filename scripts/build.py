@@ -51,7 +51,7 @@ assert isinstance(content["interviewSlots"], list)
 if OUT.exists():
     shutil.rmtree(OUT)
 OUT.mkdir()
-for name in ("index.html", "styles.css", "app.js", "core.js", "setlists.js", "feedback.js", "guitLogo.png"):
+for name in ("index.html", "styles.css", "app.js", "core.js", "setlists.js", "feedback.js", "home-video.js", "guitLogo.png"):
     copy(ROOT / name, OUT / name)
 copy(ROOT / "data/content.json", OUT / "data/content.json")
 copy(ROOT / "assets/cleantheroom.png", OUT / "assets/cleantheroom.png")
