@@ -245,6 +245,28 @@ async function refreshApplicants(password = state.adminPassword) {
   finally { if (request === state.listRequest) $("refresh-applicants").disabled = false; }
 }
 
+const mainNav = document.querySelector(".main-nav");
+
+function updateNavIndicator() {
+  const active = mainNav.querySelector('[aria-current="page"]');
+  if (!active) return;
+  const style = getComputedStyle(active);
+  const left = parseFloat(style.paddingLeft);
+  const right = parseFloat(style.paddingRight);
+  mainNav.style.setProperty("--nav-line-x", active.offsetLeft + left + "px");
+  mainNav.style.setProperty("--nav-line-y", active.offsetTop + active.offsetHeight - 6 + "px");
+  mainNav.style.setProperty("--nav-line-width", Math.max(0, active.offsetWidth - left - right) + "px");
+  if (!mainNav.classList.contains("indicator-ready")) {
+    mainNav.classList.add("indicator-ready");
+    requestAnimationFrame(() => requestAnimationFrame(() => mainNav.classList.add("indicator-animated")));
+  }
+}
+
+const navResizeObserver = new ResizeObserver(updateNavIndicator);
+navResizeObserver.observe(mainNav);
+for (const link of mainNav.querySelectorAll("a")) navResizeObserver.observe(link);
+document.fonts.ready.then(updateNavIndicator);
+
 function showView(moveFocus = false) {
   const [requested, performance, sheet] = location.hash.slice(1).split("/");
   const view = ["about", "schedule", "guitar-class", "performances", "recruitment"].includes(requested) ? requested : "about";
@@ -253,6 +275,7 @@ function showView(moveFocus = false) {
     if (link.dataset.view === view) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
+  updateNavIndicator();
   if (moveFocus) $("main").focus({ preventScroll: true });
   const hasTabs = view !== "about";
   $("main").classList.toggle("with-tabs", hasTabs);

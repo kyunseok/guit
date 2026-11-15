@@ -149,14 +149,15 @@ tbody tr:last-child td { border-bottom: 0; }
 
 
 
-.main-nav { display: flex; flex-wrap: nowrap; gap: 0; overflow-x: auto; background: var(--accent-fill); }
+.main-nav { position: relative; display: flex; flex-wrap: nowrap; gap: 0; overflow-x: auto; background: var(--accent-fill); }
 .main-nav a { position: relative; flex: 0 0 auto; padding: 11px 14px; border: 0; background: transparent; color: #000; white-space: nowrap; transition: color 150ms ease; }
-.main-nav a::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 4px; height: 2px; background: #fff; opacity: 0; pointer-events: none; }
-.main-nav a[aria-current="page"]::after { opacity: 1; }
+.main-nav::after { content: ""; position: absolute; left: 0; top: var(--nav-line-y, 0px); width: var(--nav-line-width, 0px); height: 2px; background: #fff; transform: translateX(var(--nav-line-x, 0px)); opacity: 0; pointer-events: none; }
+.main-nav.indicator-ready::after { opacity: 1; }
+.main-nav.indicator-animated::after { transition: transform 180ms cubic-bezier(.22, .61, .36, 1), width 180ms cubic-bezier(.22, .61, .36, 1); }
 .main-nav a:hover, .main-nav a:active { background: transparent; color: #000; transform: none; }
 .main-nav a[aria-current="page"] { background: transparent; color: #fff; }
 @media (hover: hover) {
-  .main-nav a:hover { background: transparent; color: var(--nav-hover); }
+  .main-nav a:hover:not([aria-current="page"]) { background: transparent; color: var(--nav-hover); }
 }
 .main-nav a:focus-visible { outline-color: #fff; outline-offset: -4px; }
 .section-tabs { display: flex; flex-direction: column; gap: 0; background: transparent; }
@@ -187,10 +188,9 @@ tbody tr:last-child td { border-bottom: 0; }
 }
 @media (max-width: 520px) {
   .main-nav a { padding: 10px 12px; font-size: .85rem; }
-  .main-nav a::after { left: 12px; right: 12px; }
   .section-tabs a, .section-tabs button { font-size: .85rem; }
 }
-@media (prefers-reduced-motion: reduce) { .main-nav a, .section-tabs a, .section-tabs button { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .main-nav a, .section-tabs a, .section-tabs button, .main-nav.indicator-animated::after { transition: none; } }
 
 
 .song-feedback-link { display: inline; min-height: 0; padding: 0; border: 0; background: transparent; color: var(--accent); text-align: left; text-decoration: underline; text-underline-offset: 4px; font: inherit; line-height: inherit; overflow-wrap: anywhere; }
