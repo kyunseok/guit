@@ -5,7 +5,7 @@
   --ink: #29231f;
   --accent: #854819;
   --accent-fill: #935b2f;
-  --nav-hover: #b78862;
+  --nav-hover: #f0d7c1;
   --border: #e5ded8;
   --muted: #746b64;
   --soft: #f7f3ef;
@@ -150,11 +150,13 @@ tbody tr:last-child td { border-bottom: 0; }
 
 
 .main-nav { display: flex; flex-wrap: nowrap; gap: 0; overflow-x: auto; background: var(--accent-fill); }
-.main-nav a { flex: 0 0 auto; padding: 11px 14px; border: 0; background: transparent; color: #000; white-space: nowrap; transition: background-color 150ms ease, color 150ms ease; }
+.main-nav a { position: relative; flex: 0 0 auto; padding: 11px 14px; border: 0; background: transparent; color: #000; white-space: nowrap; transition: color 150ms ease; }
+.main-nav a::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 4px; height: 2px; background: #fff; opacity: 0; pointer-events: none; }
+.main-nav a[aria-current="page"]::after { opacity: 1; }
 .main-nav a:hover, .main-nav a:active { background: transparent; color: #000; transform: none; }
 .main-nav a[aria-current="page"] { background: transparent; color: #fff; }
 @media (hover: hover) {
-  .main-nav a:hover { background: var(--nav-hover); }
+  .main-nav a:hover { background: transparent; color: var(--nav-hover); }
 }
 .main-nav a:focus-visible { outline-color: #fff; outline-offset: -4px; }
 .section-tabs { display: flex; flex-direction: column; gap: 0; background: transparent; }
@@ -185,6 +187,7 @@ tbody tr:last-child td { border-bottom: 0; }
 }
 @media (max-width: 520px) {
   .main-nav a { padding: 10px 12px; font-size: .85rem; }
+  .main-nav a::after { left: 12px; right: 12px; }
   .section-tabs a, .section-tabs button { font-size: .85rem; }
 }
 @media (prefers-reduced-motion: reduce) { .main-nav a, .section-tabs a, .section-tabs button { transition: none; } }
