@@ -392,8 +392,10 @@ async function loadSetlist(id) {
     wrapper.setAttribute("aria-label", item.title + " 셋리스트");
     const table = element("table", undefined, "setlist-table");
     const head = element("thead"), header = element("tr"), body = element("tbody");
-    for (const label of result.headers) {
-      const th = element("th", label);
+    const songColumn = item.songColumn ?? 1;
+    const visibleColumns = result.headers.map((label, index) => ({ label, index })).filter(({ label }) => label.replace(/\s/g, "") !== "구분");
+    for (const { label, index } of visibleColumns) {
+      const th = element("th", label, index === songColumn ? "setlist-song" : undefined);
       th.scope = "col";
       header.append(th);
     }
@@ -402,10 +404,12 @@ async function loadSetlist(id) {
     for (const row of result.rows) {
       if (/^\d+\s*조$/.test(row[0]?.trim())) group = row[0].trim();
       const songGroup = group;
+      if (!visibleColumns.some(({ index }) => row[index]?.trim())) continue;
       const tr = element("tr");
-      for (const [column, value] of row.entries()) {
-        const cell = element("td");
-        if (column === (item.songColumn ?? 1) && value.trim() && !/^예시/.test(row[0]?.trim())) {
+      for (const { index: column } of visibleColumns) {
+        const value = row[column] || "";
+        const cell = element("td", undefined, column === songColumn ? "setlist-song" : undefined);
+        if (column === songColumn && value.trim() && !/^예시/.test(row[0]?.trim())) {
           const song = element("button", value, "song-feedback-link");
           song.type = "button";
           song.setAttribute("aria-label", value + " 피드백 보기 및 작성");
@@ -428,7 +432,7 @@ async function loadSetlist(id) {
     item.data.append(wrapper);
     item.loadedAt = Date.now();
     item.status.replaceChildren();
-    if (!result.rows.length) item.status.append(element("p", "아직 입력된 셋리스트가 없습니다.", "muted"));
+    if (!body.children.length) item.status.append(element("p", "아직 입력된 셋리스트가 없습니다.", "muted"));
   } catch {
     if (request !== item.request) return;
     item.status.replaceChildren(element("p", item.loadedAt

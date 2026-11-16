@@ -174,8 +174,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .sheet-tabs { display: flex; gap: 24px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
 .sheet-tabs a { padding: 10px 0; min-height: 44px; color: var(--muted); font-size: .9rem; text-decoration: none; border-bottom: 2px solid transparent; }
 .sheet-tabs a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); }
-.setlist-table td:nth-child(2) { min-width: 220px; }
-.setlist-table th:first-child, .setlist-table td:first-child { min-width: 72px; }
+.setlist-table .setlist-song { min-width: 220px; }
 .setlist-scroll { max-width: 100%; }
 @media (max-width: 800px) {
   .site-shell { max-width: 736px; }
