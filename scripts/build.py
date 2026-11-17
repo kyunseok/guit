@@ -55,6 +55,7 @@ for name in ("index.html", "styles.css", "app.js", "core.js", "setlists.js", "fe
     copy(ROOT / name, OUT / name)
 copy(ROOT / "data/content.json", OUT / "data/content.json")
 copy(ROOT / "assets/cleantheroom.png", OUT / "assets/cleantheroom.png")
+copy(ROOT / "assets/share-preview-20261117.png", OUT / "assets/share-preview-20261117.png")
 (OUT / "config.json").write_text(json.dumps({"supabaseUrl": url, "supabasePublishableKey": key}, indent=2) + "\n")
 
 calendar = None

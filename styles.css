@@ -222,3 +222,10 @@ tbody tr:last-child td { border-bottom: 0; }
 .reservation-purpose { white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 8px; }
 .reservation-card .muted { margin-bottom: 0; }
 @media (max-width: 520px) { .reservation-time-fields { grid-template-columns: 1fr; gap: 0; } }
+
+.reservation-card { padding: 12px 14px; margin-top: 8px; }
+.reservation-card h4 { line-height: 1.4; margin-bottom: 6px; }
+.reservation-card p { line-height: 1.45; }
+.reservation-card .reservation-user { font-size: .8rem; margin-bottom: 4px; }
+.reservation-card .reservation-purpose { margin-bottom: 4px; }
+.reservation-card .muted { font-size: .75rem; }
