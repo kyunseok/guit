@@ -7,8 +7,8 @@
   <meta name="description" content="기타하나 동아리 소개, 일정, 기타교실 미션과 청소 일정, 정모 자료와 신입부원 모집">
   <title>기타하나</title>
   <link rel="icon" href="guitLogo.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=room-reservations-20261117">
-  <script type="module" src="app.js?v=room-reservations-20261117"></script>
+  <link rel="stylesheet" href="styles.css?v=room-reservation-tabs-20261117">
+  <script type="module" src="app.js?v=room-reservation-tabs-20261117"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -39,6 +39,10 @@
     </header>
     <main id="main" tabindex="-1">
       <aside id="side-tabs" hidden>
+        <nav id="reservation-nav" class="section-tabs" aria-label="동방 예약" hidden>
+          <a href="#room-reservation/book" data-reservation-tab="book">예약하기</a>
+          <a href="#room-reservation/list" data-reservation-tab="list">예약 현황</a>
+        </nav>
         <nav id="semester-nav" class="section-tabs" aria-label="학기 선택" hidden></nav>
         <nav id="performance-nav" class="section-tabs" aria-label="공연 선택" hidden></nav>
         <div id="recruitment-nav" class="section-tabs" role="tablist" aria-orientation="vertical" hidden aria-label="신입부원 모집">
@@ -67,26 +71,33 @@
       </section>
       <section id="room-reservation" class="view" aria-labelledby="reservation-title" hidden>
         <h2 id="reservation-title">동방 예약</h2>
-        <p class="muted">한국 시간 기준 · 한 번에 최대 2시간<br>앞 예약의 종료 시각부터 바로 예약할 수 있습니다.</p>
-        <form id="reservation-form">
-          <fieldset id="reservation-fields" disabled>
-            <div class="reservation-time-fields">
-              <div><label for="reservation-start">예약 시작 일시</label><input id="reservation-start" name="start" type="datetime-local" step="60" required></div>
-              <div><label for="reservation-end">예약 종료 일시</label><input id="reservation-end" name="end" type="datetime-local" step="60" required></div>
-            </div>
-            <label for="reservation-purpose">사용 목적</label><textarea id="reservation-purpose" name="purpose" maxlength="300" rows="3" placeholder="예: 정기공연 합주 연습" required></textarea>
-            <label for="reservation-people">사용 인원</label><input id="reservation-people" name="people" type="number" inputmode="numeric" min="1" max="2147483647" step="1" value="1" required>
-            <button id="reservation-submit" type="submit">예약하기</button>
-          </fieldset>
-        </form>
-        <div id="reservation-status" role="status" aria-live="polite"></div>
-        <hr>
-        <h3 class="reservation-list-title">예약 현황</h3>
-        <div class="reservation-list-toolbar">
-          <div><label for="reservation-day">조회 날짜</label><input id="reservation-day" type="date" required></div>
-          <button id="reservation-refresh" type="button">새로고침</button>
+        <div id="reservation-book-panel" class="reservation-panel">
+          <form id="reservation-form">
+            <fieldset id="reservation-fields" disabled>
+              <label for="reservation-user">사용자</label><input id="reservation-user" name="user_name" type="text" maxlength="100" autocomplete="name" required>
+              <label for="reservation-purpose">예약 목적</label>
+              <select id="reservation-purpose" name="purpose" required>
+                <option value="" disabled selected>선택해 주세요</option>
+                <option value="기타교실">기타교실</option>
+                <option value="합주연습">합주연습</option>
+              </select>
+              <label for="reservation-people">사용 인원</label><input id="reservation-people" name="people" type="number" inputmode="numeric" min="1" max="2147483647" step="1" value="1" required>
+              <div class="reservation-time-fields">
+                <div><label for="reservation-start">예약 시작 일시</label><input id="reservation-start" name="start" type="datetime-local" step="60" required></div>
+                <div><label for="reservation-end">예약 종료 일시</label><input id="reservation-end" name="end" type="datetime-local" step="60" required></div>
+              </div>
+              <button id="reservation-submit" type="submit">예약하기</button>
+            </fieldset>
+          </form>
+          <div id="reservation-status" role="status" aria-live="polite"></div>
         </div>
-        <div id="reservation-list" aria-live="polite"><p class="muted">예약 현황을 불러오는 중입니다.</p></div>
+        <div id="reservation-list-panel" class="reservation-panel" hidden>
+          <div class="reservation-list-toolbar">
+            <div><label for="reservation-day">조회 날짜</label><input id="reservation-day" type="date" required></div>
+            <button id="reservation-refresh" type="button">새로고침</button>
+          </div>
+          <div id="reservation-list" aria-live="polite"><p class="muted">예약 현황을 불러오는 중입니다.</p></div>
+        </div>
       </section>
       <section id="guitar-class" class="view" aria-label="기타교실" hidden>
         <div id="guitar-class-26-2" class="semester-panel">

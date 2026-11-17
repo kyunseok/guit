@@ -4,7 +4,7 @@ import { koreaInput, koreaTime, reservationValues, reservationsOverlap } from '.
 import { createApi } from '../core.js';
 
 const now = Date.parse('2026-11-17T00:00:00Z');
-const valid = { start: '2026-11-18T13:00', end: '2026-11-18T15:00', purpose: '합주', people: '3' };
+const valid = { start: '2026-11-18T13:00', end: '2026-11-18T15:00', user_name: '테스트 사용자', purpose: '합주연습', people: '3' };
 
 test('Korean dates are independent of the browser timezone', () => {
   assert.equal(koreaTime('2026-11-18T13:00'), Date.parse('2026-11-18T04:00:00Z'));
@@ -14,7 +14,8 @@ test('Korean dates are independent of the browser timezone', () => {
 
 test('two hours is allowed, invalid durations and inputs are rejected', () => {
   assert.equal(reservationValues(valid, now).people, 3);
-  for (const change of [{end:'2026-11-18T15:01'}, {end:valid.start}, {end:'2026-11-18T12:59'}, {people:'0'}, {people:'1.5'}, {purpose:'  '}, {start:'2026-11-16T13:00'}]) {
+  assert.equal(reservationValues({...valid,user_name:'  사용자  ',purpose:'기타교실'},now).user_name,'사용자');
+  for (const change of [{end:'2026-11-18T15:01'}, {end:valid.start}, {end:'2026-11-18T12:59'}, {people:'0'}, {people:'1.5'}, {purpose:'  '}, {purpose:'개인연습'}, {user_name:'  '}, {user_name:'가'.repeat(101)}, {start:'2026-11-16T13:00'}]) {
     assert.throws(() => reservationValues({...valid,...change}, now));
   }
   assert.doesNotThrow(() => reservationValues({...valid,start:'2026-11-18T23:00',end:'2026-11-19T01:00'},now));

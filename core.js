@@ -88,7 +88,7 @@ export function createApi(config, transport = fetch) {
     async reservationsList(from, to) {
       const rows = [];
       for (let offset = 0; ; offset += 500) {
-        const query = new URLSearchParams({ select: "id,starts_at,ends_at,purpose,people", starts_at: "lt." + to, ends_at: "gt." + from, order: "starts_at.asc,id.asc", limit: "500", offset: String(offset) });
+        const query = new URLSearchParams({ select: "id,starts_at,ends_at,user_name,purpose,people", starts_at: "lt." + to, ends_at: "gt." + from, order: "starts_at.asc,id.asc", limit: "500", offset: String(offset) });
         const result = await request("room_reservations?" + query);
         if (!Array.isArray(result.data)) throw new Error("INVALID_RESPONSE");
         rows.push(...result.data);
@@ -100,10 +100,10 @@ export function createApi(config, transport = fetch) {
         await request("room_reservations", { method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(values) });
       } catch (error) {
         try {
-          const query = new URLSearchParams({ select: "id,starts_at,ends_at,purpose,people", id: "eq." + values.id, limit: "1" });
+          const query = new URLSearchParams({ select: "id,starts_at,ends_at,user_name,purpose,people", id: "eq." + values.id, limit: "1" });
           const result = await request("room_reservations?" + query);
           const row = result.data?.[0];
-          if (row && row.id === values.id && new Date(row.starts_at).getTime() === new Date(values.starts_at).getTime() && new Date(row.ends_at).getTime() === new Date(values.ends_at).getTime() && row.purpose === values.purpose && row.people === values.people) return;
+          if (row && row.id === values.id && new Date(row.starts_at).getTime() === new Date(values.starts_at).getTime() && new Date(row.ends_at).getTime() === new Date(values.ends_at).getTime() && row.user_name === values.user_name && row.purpose === values.purpose && row.people === values.people) return;
         } catch {}
         throw error;
       }

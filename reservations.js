@@ -17,10 +17,12 @@ export function reservationValues(values, now = Date.now()) {
   if (start <= now) throw new Error('예약 시작은 현재 시각 이후로 선택해 주세요.');
   if (end <= start) throw new Error('종료 일시는 시작 일시보다 늦어야 합니다.');
   if (end - start > 2 * HOUR) throw new Error('동방은 한 번에 최대 2시간까지 예약할 수 있습니다.');
-  const purpose = values.purpose.trim(), people = Number(values.people);
-  if (!purpose || purpose.length > 300) throw new Error('사용 목적을 1~300자로 입력해 주세요.');
+  const user_name = (values.user_name || '').trim();
+  if (!user_name || user_name.length > 100) throw new Error('사용자를 1~100자로 입력해 주세요.');
+  const purpose = values.purpose, people = Number(values.people);
+  if (!['기타교실', '합주연습'].includes(purpose)) throw new Error('예약 목적은 기타교실 또는 합주연습 중에서 선택해 주세요.');
   if (!Number.isInteger(people) || people < 1 || people > 2147483647) throw new Error('사용 인원을 1명 이상의 정수로 입력해 주세요.');
-  return { starts_at: new Date(start).toISOString(), ends_at: new Date(end).toISOString(), purpose, people };
+  return { starts_at: new Date(start).toISOString(), ends_at: new Date(end).toISOString(), user_name, purpose, people };
 }
 
 export function reservationsOverlap(a, b) {
@@ -32,7 +34,7 @@ export function initializeReservations(getApi) {
   const form = $('reservation-form'), fields = $('reservation-fields');
   const start = $('reservation-start'), end = $('reservation-end'), day = $('reservation-day');
   const submit = $('reservation-submit');
-  let visible = false, connected = false, busy = false, request = 0, pending = null;
+  let visible = false, selected = 'book', connected = false, busy = false, request = 0, pending = null;
 
   function note(target, text, type = '') {
     const p = document.createElement('p');
@@ -69,13 +71,16 @@ export function initializeReservations(getApi) {
       const count = document.createElement('p');
       count.className = 'muted';
       count.textContent = row.people + '명 · ' + Math.round((new Date(row.ends_at) - new Date(row.starts_at)) / 60000) + '분';
-      card.append(heading, purpose, count);
+      const user = document.createElement('p');
+      user.className = 'reservation-user';
+      user.textContent = '사용자: ' + (row.user_name || '미입력');
+      card.append(heading, user, purpose, count);
       list.append(card);
     }
   }
 
   async function refresh() {
-    if (!visible || !getApi()) return;
+    if (!visible || selected !== 'list' || !getApi()) return;
     const from = koreaTime(day.value + 'T00:00');
     if (!Number.isFinite(from)) return;
     const current = ++request;
@@ -113,7 +118,7 @@ export function initializeReservations(getApi) {
     if (busy || !getApi()) return;
     let values;
     try {
-      values = reservationValues({ start: start.value, end: end.value, purpose: $('reservation-purpose').value, people: $('reservation-people').value });
+      values = reservationValues({ start: start.value, end: end.value, user_name: $('reservation-user').value, purpose: $('reservation-purpose').value, people: $('reservation-people').value });
     } catch (error) { note('reservation-status', error.message, 'error'); return; }
     const signature = JSON.stringify(values);
     if (!pending || pending.signature !== signature) pending = { signature, id: crypto.randomUUID() };
@@ -131,8 +136,8 @@ export function initializeReservations(getApi) {
       await refresh();
     } catch (error) {
       const messages = {
-        '23P01': '이미 예약된 시간과 겹칩니다. 예약 현황을 확인하고 다른 시간을 선택해 주세요.',
-        '23514': '예약 내용을 확인해 주세요. 이용 시간은 최대 2시간이며 사용 인원은 1명 이상이어야 합니다.',
+        '23P01': '이미 예약된 시간과 겹칩니다. 예약 현황 탭을 확인하고 다른 시간을 선택해 주세요.',
+        '23514': '예약 내용을 확인해 주세요. 사용자와 예약 목적을 입력하고, 이용 시간은 최대 2시간, 사용 인원은 1명 이상으로 설정해 주세요.',
         '42501': '예약할 수 없습니다. 시작 시각이 지났는지 확인한 뒤 다시 시도해 주세요.'
       };
       note('reservation-status', messages[error.code] || '예약 결과를 확인하지 못했습니다. 입력 내용을 유지한 채 예약하기를 다시 눌러 주세요.', 'error');
@@ -146,10 +151,19 @@ export function initializeReservations(getApi) {
   });
 
   return {
-    show(value) {
-      const entering = value && !visible;
+    show(value, tab) {
+      const next = tab === 'list' ? 'list' : 'book';
+      const entering = value && (!visible || selected !== next);
+      if (!value || selected !== next) request++;
       visible = value;
-      if (!value) request++;
+      selected = next;
+      $('reservation-book-panel').hidden = next !== 'book';
+      $('reservation-list-panel').hidden = next !== 'list';
+      $('reservation-title').textContent = next === 'list' ? '예약 현황' : '동방 예약';
+      for (const link of $('reservation-nav').querySelectorAll('a')) {
+        if (link.dataset.reservationTab === next) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+      }
       if (entering) { limits(); refresh(); }
     },
     connect() {
