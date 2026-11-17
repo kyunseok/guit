@@ -229,3 +229,13 @@ tbody tr:last-child td { border-bottom: 0; }
 .reservation-card .reservation-user { font-size: .8rem; margin-bottom: 4px; }
 .reservation-card .reservation-purpose { margin-bottom: 4px; }
 .reservation-card .muted { font-size: .75rem; }
+
+#reservation-password-help { margin: 6px 0 0; line-height: 1.45; }
+.reservation-card .reservation-cancel { background: #c4433d; color: #fff; border: 1px solid var(--accent); padding: 5px 10px; min-height: 32px; font-size: .78rem; margin-top: 8px; }
+.reservation-card .reservation-cancel:hover:not(:disabled), .reservation-card .reservation-cancel:active:not(:disabled) { background: #ac3430; color: #fff; border-color: var(--accent); }
+.reservation-cancel-form { max-width: 320px; margin-top: 8px; }
+.reservation-cancel-form label { font-size: .8rem; margin: 0 0 6px; }
+.reservation-cancel-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.reservation-cancel-actions button { padding: 5px 10px; min-height: 32px; font-size: .78rem; margin: 0 !important; }
+.reservation-card .reservation-cancel-message { font-size: .78rem; margin: 6px 0 0; color: #8c3124; }
+.reservation-cancel-message:empty { display: none; }

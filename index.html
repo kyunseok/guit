@@ -22,8 +22,8 @@
   <meta name="twitter:image" content="https://kyunseok.github.io/guit/assets/share-preview-20261117.png">
   <meta name="twitter:image:alt" content="헤드폰을 쓰고 기타를 연주하는 토끼">
   <link rel="icon" href="guitLogo.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=share-compact-20261117">
-  <script type="module" src="app.js?v=room-monthly-20261117"></script>
+  <link rel="stylesheet" href="styles.css?v=room-cancel-20261117">
+  <script type="module" src="app.js?v=room-cancel-20261117"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -101,6 +101,8 @@
                 <div><label for="reservation-start">예약 시작 일시</label><input id="reservation-start" name="start" type="datetime-local" step="60" required></div>
                 <div><label for="reservation-end">예약 종료 일시</label><input id="reservation-end" name="end" type="datetime-local" step="60" required></div>
               </div>
+              <label for="reservation-password">비밀번호(선택)</label><input id="reservation-password" name="password" type="password" maxlength="128" autocomplete="new-password" aria-describedby="reservation-password-help">
+              <p id="reservation-password-help" class="muted">비워두면 누구나 예약을 취소할 수 있습니다.</p>
               <button id="reservation-submit" type="submit">예약하기</button>
             </fieldset>
           </form>
@@ -111,6 +113,7 @@
             <div><label for="reservation-month">조회 월</label><input id="reservation-month" type="month" placeholder="YYYY-MM" required></div>
             <button id="reservation-refresh" type="button">새로고침</button>
           </div>
+          <div id="reservation-list-status" role="status" aria-live="polite"></div>
           <div id="reservation-list" aria-live="polite"><p class="muted">예약 현황을 불러오는 중입니다.</p></div>
         </div>
       </section>

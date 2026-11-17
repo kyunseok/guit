@@ -31,7 +31,9 @@ export function reservationValues(values, now = Date.now()) {
   const purpose = values.purpose, people = Number(values.people);
   if (!['기타교실', '합주연습'].includes(purpose)) throw new Error('예약 목적은 기타교실 또는 합주연습 중에서 선택해 주세요.');
   if (!Number.isInteger(people) || people < 1 || people > 2147483647) throw new Error('사용 인원을 1명 이상의 정수로 입력해 주세요.');
-  return { starts_at: new Date(start).toISOString(), ends_at: new Date(end).toISOString(), user_name, purpose, people };
+  const password = values.password || '';
+  if (password.length > 128) throw new Error('비밀번호는 128자 이하로 입력해 주세요.');
+  return { password, starts_at: new Date(start).toISOString(), ends_at: new Date(end).toISOString(), user_name, purpose, people };
 }
 
 export function reservationsOverlap(a, b) {
@@ -84,8 +86,85 @@ export function initializeReservations(getApi) {
       user.className = 'reservation-user';
       user.textContent = '사용자: ' + (row.user_name || '미입력');
       card.append(heading, user, purpose, count);
+      addCancellation(card, row);
       list.append(card);
     }
+  }
+
+  function addCancellation(card, row) {
+    const action = document.createElement('button');
+    action.type = 'button';
+    action.className = 'reservation-cancel';
+    action.textContent = '예약 취소';
+    const cancelForm = document.createElement('form');
+    cancelForm.className = 'reservation-cancel-form';
+    cancelForm.hidden = true;
+    const label = document.createElement('label');
+    const password = document.createElement('input');
+    password.id = 'cancel-password-' + row.id;
+    password.type = 'password';
+    password.maxLength = 128;
+    password.autocomplete = 'current-password';
+    password.required = true;
+    label.htmlFor = password.id;
+    label.textContent = '취소 비밀번호';
+    const confirm = document.createElement('button');
+    confirm.type = 'submit';
+    confirm.className = 'reservation-cancel';
+    confirm.textContent = '예약 취소';
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.textContent = '닫기';
+    const actions = document.createElement('div');
+    actions.className = 'reservation-cancel-actions';
+    actions.append(confirm, close);
+    const message = document.createElement('p');
+    message.className = 'reservation-cancel-message';
+    message.setAttribute('role', 'status');
+    let cancelling = false;
+    function openPassword() {
+      cancelForm.hidden = false;
+      action.hidden = true;
+      password.focus();
+    }
+    close.addEventListener('click', () => {
+      cancelForm.hidden = true;
+      action.hidden = false;
+      password.value = '';
+      message.textContent = '';
+      action.focus();
+    });
+    async function cancel(value) {
+      if (cancelling || !getApi()) return;
+      cancelling = true;
+      action.disabled = confirm.disabled = close.disabled = password.disabled = true;
+      message.textContent = '예약을 취소하는 중입니다.';
+      try {
+        const result = await getApi().reservationCancel(row.id, value);
+        if (result === 'cancelled' || result === 'already_cancelled') {
+          password.value = '';
+          note('reservation-list-status', '예약이 취소되었습니다.', 'success');
+          await refresh();
+          if (visible && selected === 'list') $('reservation-refresh').focus({ preventScroll: true });
+        } else if (result === 'password_required') {
+          message.textContent = '예약 시 설정한 비밀번호를 입력해 주세요.';
+          openPassword();
+        } else {
+          const errors = { invalid_password: '비밀번호가 일치하지 않습니다.', rate_limited: '입력 횟수를 초과했습니다. 5분 후 다시 시도해 주세요.', unavailable: '예약을 취소할 수 없습니다. 잠시 후 다시 시도해 주세요.' };
+          message.textContent = errors[result];
+        }
+      } catch {
+        message.textContent = '취소 결과를 확인하지 못했습니다. 다시 시도하거나 예약 현황을 새로고침해 주세요.';
+      } finally {
+        cancelling = false;
+        action.disabled = confirm.disabled = close.disabled = password.disabled = false;
+        if (!cancelForm.hidden && card.isConnected) password.focus();
+      }
+    }
+    action.addEventListener('click', () => row.has_password ? openPassword() : cancel(''));
+    cancelForm.addEventListener('submit', event => { event.preventDefault(); cancel(password.value); });
+    cancelForm.append(label, password, actions);
+    card.append(action, cancelForm, message);
   }
 
   async function refresh() {
@@ -127,7 +206,7 @@ export function initializeReservations(getApi) {
     if (busy || !getApi()) return;
     let values;
     try {
-      values = reservationValues({ start: start.value, end: end.value, user_name: $('reservation-user').value, purpose: $('reservation-purpose').value, people: $('reservation-people').value });
+      values = reservationValues({ start: start.value, end: end.value, user_name: $('reservation-user').value, purpose: $('reservation-purpose').value, people: $('reservation-people').value, password: $('reservation-password').value });
     } catch (error) { note('reservation-status', error.message, 'error'); return; }
     const signature = JSON.stringify(values);
     if (!pending || pending.signature !== signature) pending = { signature, id: crypto.randomUUID() };
@@ -141,6 +220,7 @@ export function initializeReservations(getApi) {
       pending = null;
       note('reservation-status', '예약이 완료되었습니다.', 'success');
       $('reservation-purpose').value = '';
+      $('reservation-password').value = '';
       month.value = start.value.slice(0, 7);
       await refresh();
     } catch (error) {
