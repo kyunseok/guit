@@ -207,3 +207,18 @@ tbody tr:last-child td { border-bottom: 0; }
 #feedback-fields > label:first-child { margin-top: 0; }
 #feedback-fields .muted { margin: 8px 0 16px; }
 @media (max-width: 520px) { #feedback-dialog { padding: 20px; } }
+
+.reservation-time-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.reservation-time-fields > div { min-width: 0; }
+#reservation-form input { min-width: 0; max-width: 100%; }
+#reservation-people { max-width: 160px; display: block; }
+#reservation-submit { margin-top: 22px; }
+.reservation-list-title { margin-top: 0; }
+.reservation-list-toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.reservation-list-toolbar label { margin-top: 0; }
+.reservation-list-toolbar > div { min-width: 0; flex: 1 1 180px; }
+.reservation-card { border: 1px solid var(--border); padding: 20px; margin-top: 12px; }
+.reservation-card h4 { margin: 0 0 10px; font-size: .95rem; color: var(--accent); }
+.reservation-purpose { white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 8px; }
+.reservation-card .muted { margin-bottom: 0; }
+@media (max-width: 520px) { .reservation-time-fields { grid-template-columns: 1fr; gap: 0; } }

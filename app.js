@@ -1,4 +1,5 @@
-import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=feedback-20261114";
+import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=room-reservations-20261117";
+import { initializeReservations } from "./reservations.js?v=room-reservations-20261117";
 import { fetchSetlist } from "./setlists.js?v=sheet-tabs-20261114";
 
 import { initializeFeedback } from "./feedback.js?v=feedback-20261114";
@@ -7,6 +8,7 @@ const $ = id => document.getElementById(id);
 const state = { api: null, applicants: [], assignments: [], initialized: false, listRequest: 0, adminPassword: "" };
 const performanceState = new Map();
 const openFeedback = initializeFeedback(() => state.api, formatDate);
+const reservations = initializeReservations(() => state.api);
 let activeView = "", activePerformance = "";
 
 function element(tag, text, className) {
@@ -269,7 +271,7 @@ document.fonts.ready.then(updateNavIndicator);
 
 function showView(moveFocus = false) {
   const [requested, performance, sheet] = location.hash.slice(1).split("/");
-  const view = ["about", "schedule", "guitar-class", "performances", "recruitment"].includes(requested) ? requested : "about";
+  const view = ["about", "schedule", "room-reservation", "guitar-class", "performances", "recruitment"].includes(requested) ? requested : "about";
   for (const section of document.querySelectorAll(".view")) section.hidden = section.id !== view;
   for (const link of document.querySelectorAll("[data-view]")) {
     if (link.dataset.view === view) link.setAttribute("aria-current", "page");
@@ -277,7 +279,7 @@ function showView(moveFocus = false) {
   }
   updateNavIndicator();
   if (moveFocus) $("main").focus({ preventScroll: true });
-  const hasTabs = view !== "about";
+  const hasTabs = !["about", "room-reservation"].includes(view);
   $("main").classList.toggle("with-tabs", hasTabs);
   $("side-tabs").hidden = !hasTabs;
   $("performance-nav").hidden = view !== "performances";
@@ -285,6 +287,7 @@ function showView(moveFocus = false) {
   $("semester-nav").hidden = !["schedule", "guitar-class"].includes(view);
   if (view === "schedule" || view === "guitar-class") showSemester(view, performance);
   if (view === "performances") showPerformance(performance, activeView !== view, sheet);
+  reservations.show(view === "room-reservation");
   activeView = view;
   if (view === "recruitment" && state.initialized) refreshApplicants();
 }
@@ -557,6 +560,7 @@ async function initialize() {
     $("admin-login-button").disabled = false;
   } catch { message("connection-status", "모집 기능에 연결할 수 없습니다. 운영진에게 문의해 주세요.", "error"); }
   state.initialized = true;
+  reservations.connect();
   if (location.hash === "#recruitment") refreshApplicants();
 }
 
