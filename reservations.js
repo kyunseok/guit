@@ -11,6 +11,15 @@ export function koreaTime(value) {
   return Number.isFinite(time) && koreaInput(time) === value ? time : NaN;
 }
 
+export function koreaMonthRange(value) {
+  if (!/^\d{4}-\d{2}$/.test(value)) return null;
+  const from = koreaTime(value + '-01T00:00');
+  if (!Number.isFinite(from)) return null;
+  const next = new Date(from + KST);
+  next.setUTCMonth(next.getUTCMonth() + 1);
+  return { from: new Date(from).toISOString(), to: new Date(next.getTime() - KST).toISOString() };
+}
+
 export function reservationValues(values, now = Date.now()) {
   const start = koreaTime(values.start), end = koreaTime(values.end);
   if (!Number.isFinite(start) || !Number.isFinite(end)) throw new Error('시작 일시와 종료 일시를 입력해 주세요.');
@@ -32,7 +41,7 @@ export function reservationsOverlap(a, b) {
 export function initializeReservations(getApi) {
   const $ = id => document.getElementById(id);
   const form = $('reservation-form'), fields = $('reservation-fields');
-  const start = $('reservation-start'), end = $('reservation-end'), day = $('reservation-day');
+  const start = $('reservation-start'), end = $('reservation-end'), month = $('reservation-month');
   const submit = $('reservation-submit');
   let visible = false, selected = 'book', connected = false, busy = false, request = 0, pending = null;
 
@@ -56,7 +65,7 @@ export function initializeReservations(getApi) {
     const list = $('reservation-list');
     list.replaceChildren();
     if (!rows.length) {
-      note('reservation-list', '이 날짜에는 등록된 예약이 없습니다.');
+      note('reservation-list', '이 달에는 등록된 예약이 없습니다.');
       return;
     }
     const time = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -81,12 +90,12 @@ export function initializeReservations(getApi) {
 
   async function refresh() {
     if (!visible || selected !== 'list' || !getApi()) return;
-    const from = koreaTime(day.value + 'T00:00');
-    if (!Number.isFinite(from)) return;
     const current = ++request;
+    const range = koreaMonthRange(month.value);
+    if (!range) { note('reservation-list', '조회할 연도와 월을 선택해 주세요.'); return; }
     note('reservation-list', '예약 현황을 불러오는 중입니다.');
     try {
-      const rows = await getApi().reservationsList(new Date(from).toISOString(), new Date(from + 24 * HOUR).toISOString());
+      const rows = await getApi().reservationsList(range.from, range.to);
       if (current === request && visible) render(rows);
     } catch {
       if (current === request && visible) note('reservation-list', '예약 현황을 불러오지 못했습니다. 새로고침을 눌러 다시 확인해 주세요.', 'error');
@@ -96,7 +105,7 @@ export function initializeReservations(getApi) {
   const initial = Math.ceil((Date.now() + 60000) / (30 * 60000)) * 30 * 60000;
   start.value = koreaInput(initial);
   end.value = koreaInput(initial + HOUR);
-  day.value = start.value.slice(0, 10);
+  month.value = start.value.slice(0, 7);
   limits();
   fields.disabled = true;
 
@@ -105,11 +114,11 @@ export function initializeReservations(getApi) {
     const time = koreaTime(start.value), finish = koreaTime(end.value);
     if (Number.isFinite(time)) {
       if (!Number.isFinite(finish) || finish <= time || finish - time > 2 * HOUR) end.value = koreaInput(time + HOUR);
-      day.value = start.value.slice(0, 10);
+      month.value = start.value.slice(0, 7);
       refresh();
     }
   });
-  day.addEventListener('change', refresh);
+  month.addEventListener('change', refresh);
   $('reservation-refresh').addEventListener('click', refresh);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { limits(); refresh(); } });
 
@@ -132,7 +141,7 @@ export function initializeReservations(getApi) {
       pending = null;
       note('reservation-status', '예약이 완료되었습니다.', 'success');
       $('reservation-purpose').value = '';
-      day.value = start.value.slice(0, 10);
+      month.value = start.value.slice(0, 7);
       await refresh();
     } catch (error) {
       const messages = {
@@ -141,7 +150,7 @@ export function initializeReservations(getApi) {
         '42501': '예약할 수 없습니다. 시작 시각이 지났는지 확인한 뒤 다시 시도해 주세요.'
       };
       note('reservation-status', messages[error.code] || '예약 결과를 확인하지 못했습니다. 입력 내용을 유지한 채 예약하기를 다시 눌러 주세요.', 'error');
-      if (error.code === '23P01') { day.value = start.value.slice(0, 10); await refresh(); }
+      if (error.code === '23P01') { month.value = start.value.slice(0, 7); await refresh(); }
     } finally {
       busy = false;
       fields.disabled = !connected;

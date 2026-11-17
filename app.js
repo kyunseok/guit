@@ -1,5 +1,5 @@
-import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=room-reservation-tabs-20261117";
-import { initializeReservations } from "./reservations.js?v=room-reservation-tabs-20261117";
+import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=room-monthly-20261117";
+import { initializeReservations } from "./reservations.js?v=room-monthly-20261117";
 import { fetchSetlist } from "./setlists.js?v=sheet-tabs-20261114";
 
 import { initializeFeedback } from "./feedback.js?v=feedback-20261114";

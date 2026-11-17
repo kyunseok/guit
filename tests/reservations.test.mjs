@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { koreaInput, koreaTime, reservationValues, reservationsOverlap } from '../reservations.js';
+import { koreaInput, koreaTime, koreaMonthRange, reservationValues, reservationsOverlap } from '../reservations.js';
 import { createApi } from '../core.js';
 
 const now = Date.parse('2026-11-17T00:00:00Z');
@@ -58,4 +58,15 @@ test('list queries include reservations crossing either midnight boundary', asyn
     return new Response('[]',{status:200});
   });
   assert.deepEqual(await api.reservationsList('2026-11-17T15:00:00.000Z','2026-11-18T15:00:00.000Z'),[]);
+});
+
+
+test('monthly ranges use Korean midnight and handle year boundaries and leap years', () => {
+  assert.deepEqual(koreaMonthRange('2026-11'), {from:'2026-10-31T15:00:00.000Z',to:'2026-11-30T15:00:00.000Z'});
+  assert.deepEqual(koreaMonthRange('2026-12'), {from:'2026-11-30T15:00:00.000Z',to:'2026-12-31T15:00:00.000Z'});
+  for (const [month,days] of [['2027-02',28],['2028-02',29]]) {
+    const range=koreaMonthRange(month);
+    assert.equal((Date.parse(range.to)-Date.parse(range.from))/86400000,days);
+  }
+  for (const value of ['', '2026-13', '2026-00', '2026-1', '2026-11-17']) assert.equal(koreaMonthRange(value),null);
 });
