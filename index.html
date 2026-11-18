@@ -22,8 +22,8 @@
   <meta name="twitter:image" content="https://kyunseok.github.io/guit/assets/share-preview-20261117.png">
   <meta name="twitter:image:alt" content="헤드폰을 쓰고 기타를 연주하는 토끼">
   <link rel="icon" href="guitLogo.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=room-timetable-20261118">
-  <script type="module" src="app.js?v=room-timetable-20261118"></script>
+  <link rel="stylesheet" href="styles.css?v=room-fixed-20261118">
+  <script type="module" src="app.js?v=room-fixed-20261118"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -126,7 +126,7 @@
               <button id="reservation-today" type="button">오늘</button>
             </div>
             <p id="reservation-period" class="muted"></p>
-            <p class="reservation-legend"><span>기타교실</span><span>합주연습</span></p>
+            <p class="reservation-legend"><span>기타교실</span><span>합주연습</span><span class="fixed-legend">고정 일정</span></p>
             <output id="reservation-timetable-status" aria-live="polite"></output>
             <div id="reservation-timetable" class="reservation-timetable" aria-label="예약 시간표"></div>
           </div>
@@ -212,6 +212,7 @@
   </dialog>
 </body>
 </html>
+
 
 
 

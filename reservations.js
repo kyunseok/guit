@@ -1,4 +1,4 @@
-import { initializeTimetable } from './timetable.js?v=room-timetable-20261118';
+import { initializeTimetable } from './timetable.js?v=room-fixed-20261118';
 
 const HOUR = 60 * 60 * 1000;
 const KST = 9 * HOUR;
@@ -35,7 +35,7 @@ export function reservationValues(values, now = Date.now()) {
   if (!Number.isInteger(people) || people < 1 || people > 2147483647) throw new Error('사용 인원을 1명 이상의 정수로 입력해 주세요.');
   const password = values.password || '';
   if (password.length > 128) throw new Error('비밀번호는 128자 이하로 입력해 주세요.');
-  return { password, starts_at: new Date(start).toISOString(), ends_at: new Date(end).toISOString(), user_name, purpose, people };
+  return { password, starts_at: koreaInput(start) + ':00+09:00', ends_at: koreaInput(end) + ':00+09:00', user_name, purpose, people };
 }
 
 export function reservationsOverlap(a, b) {
@@ -98,7 +98,12 @@ export function initializeReservations(getApi) {
       user.className = 'reservation-user';
       user.textContent = '사용자: ' + (row.user_name || '미입력');
       card.append(heading, user, purpose, count);
-      addCancellation(card, row, context);
+      if (row.is_fixed) {
+        const badge = document.createElement('p');
+        badge.className = 'reservation-fixed-label';
+        badge.textContent = '매주 반복 · 고정 일정';
+        card.append(badge);
+      } else addCancellation(card, row, context);
     return card;
   }
 
@@ -187,7 +192,8 @@ export function initializeReservations(getApi) {
     if (!range) { note(target, '조회할 날짜를 선택해 주세요.'); return; }
     note(target, '예약 현황을 불러오는 중입니다.');
     try {
-      const rows = await getApi().reservationsList(range.from, range.to);
+      const [bookings, fixed] = await Promise.all([getApi().reservationsList(range.from, range.to), getApi().fixedReservationsList(range.from, range.to)]);
+      const rows = [...bookings, ...fixed].sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
       if (current !== request || !visible) return;
       if (display === 'timetable') {
         $(target).replaceChildren();
@@ -255,6 +261,7 @@ export function initializeReservations(getApi) {
       await refresh();
     } catch (error) {
       const messages = {
+        'P0001': '기타교실 고정 시간과 겹칩니다. 예약 현황에서 고정 일정을 확인하고 다른 시간을 선택해 주세요.',
         '23P01': '이미 예약된 시간과 겹칩니다. 예약 현황 탭을 확인하고 다른 시간을 선택해 주세요.',
         '23514': '예약 내용을 확인해 주세요. 사용자와 예약 목적을 입력하고, 이용 시간은 최대 2시간, 사용 인원은 1명 이상으로 설정해 주세요.',
         '42501': '예약할 수 없습니다. 시작 시각이 지났는지 확인한 뒤 다시 시도해 주세요.'
@@ -296,3 +303,4 @@ export function initializeReservations(getApi) {
     }
   };
 }
+

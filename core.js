@@ -95,6 +95,14 @@ export function createApi(config, transport = fetch) {
         if (result.data.length < 500) return rows;
       }
     },
+    async fixedReservationsList(from, to) {
+      const result = await request("rpc/guitarhana_room_fixed_occurrences_v1", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ p_from: from, p_to: to })
+      });
+      if (!Array.isArray(result.data) || result.data.some(row => row.is_fixed !== true)) throw new Error("INVALID_RESPONSE");
+      return result.data;
+    },
     async reservationSubmit(values) {
       const result = await request("rpc/guitarhana_reserve_room_v1", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
@@ -160,5 +168,6 @@ export function createApi(config, transport = fetch) {
     }
   };
 }
+
 
 
