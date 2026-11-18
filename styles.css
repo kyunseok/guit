@@ -244,8 +244,8 @@ tbody tr:last-child td { border-bottom: 0; }
 .reservation-view-options { display: flex; gap: 8px; margin-bottom: 16px; }
 .reservation-view-options button { padding: 7px 14px; font-size: .85rem; }
 .reservation-view-options button[aria-pressed="true"] { background: var(--accent); color: #fff; }
-.reservation-date-toolbar { display: flex; align-items: end; gap: 8px; flex-wrap: wrap; }
-.reservation-date-toolbar > div { flex: 1 1 150px; }
+.reservation-date-toolbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: end; gap: 8px; }
+.reservation-date-toolbar > div { min-width: 0; }
 .reservation-date-toolbar label { margin-top: 0; }
 .reservation-date-toolbar button { padding: 9px 12px; font-size: .82rem; }
 #reservation-period { margin: 12px 0 8px; }
@@ -262,7 +262,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .timetable-axis, .timetable-day { position: relative; min-width: 0; }
 .timetable-axis span { position: absolute; right: 6px; font-size: .65rem; color: #666; }
 .timetable-day { border-left: 1px solid var(--border); background: repeating-linear-gradient(to bottom, transparent 0, transparent 27px, #eee 27px, #eee 28px, transparent 28px, transparent 55px, #d8d2cc 55px, #d8d2cc 56px); }
-.timetable-day .timetable-booking { position: absolute; left: 2px; width: calc(100% - 4px); min-height: 2px; padding: 2px 3px; border-radius: 3px; text-align: left; white-space: pre-line; overflow: hidden; font-size: .67rem; line-height: 1.3; transition: filter .12s; }
+.timetable-day .timetable-booking { display: block; position: absolute; left: 2px; width: calc(100% - 4px); min-height: 2px; padding: 2px 3px; border-radius: 3px; text-align: left; white-space: pre-line; overflow: hidden; font-size: .67rem; line-height: 1.3; transition: filter .12s; }
 .timetable-day .lesson { background: #ead8c6; color: #44270e; border: 1px solid #a36d3e; }
 .timetable-day .practice { background: #dce8dc; color: #254325; border: 1px solid #547354; }
 .timetable-day .timetable-booking:hover { filter: brightness(.95); }
@@ -279,10 +279,7 @@ tbody tr:last-child td { border-bottom: 0; }
 }
 
 #reservation-refresh { margin-left: auto; }
-.reservation-date-toolbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; }
-.reservation-date-toolbar > div { min-width: 0; }
 .reservation-date-toolbar input { min-width: 0; width: 100%; }
-.timetable-day .timetable-booking { display: block; }
 .reservation-cancel-message { display: block; }
 @media (max-width: 767px) {
   .reservation-date-toolbar { gap: 6px; }
