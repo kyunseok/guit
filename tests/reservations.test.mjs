@@ -31,16 +31,38 @@ test('overlap excludes touching endpoints and includes containment', () => {
 
 const config={supabaseUrl:'https://example.supabase.co',supabasePublishableKey:'sb_publishable_test_key_for_unit_tests'};
 
-test('lost write response is recovered by checking the original request ID', async () => {
-  const values={id:'0e392c40-1c4a-4135-9748-8d985cd89d39',...reservationValues(valid,now)};
+test('booking retries reuse the request ID and passwords only travel in the RPC body', async () => {
+  const values={id:'0e392c40-1c4a-4135-9748-8d985cd89d39',...reservationValues({...valid,password:'취소암호'},now)};
   let writes=0;
   const api=createApi(config,async (url,options) => {
-    if(options.method==='POST'){writes++;throw new Error('Connection lost');}
-    assert.equal(new URL(url).searchParams.get('id'),'eq.'+values.id);
-    return new Response(JSON.stringify([values]),{status:200});
+    assert.equal(new URL(url).pathname,'/rest/v1/rpc/guitarhana_reserve_room_v1');
+    assert.equal(new URL(url).search,'');
+    assert.equal(JSON.parse(options.body).p_password,'취소암호');
+    assert.equal(JSON.parse(options.body).p_id,values.id);
+    writes++;
+    if(writes===1) throw new Error('Connection lost');
+    return new Response(JSON.stringify(values.id),{status:200});
   });
+  await assert.rejects(api.reservationSubmit(values));
   await api.reservationSubmit(values);
-  assert.equal(writes,1);
+  assert.equal(writes,2);
+});
+
+test('cancellation returns password failures without reporting success', async () => {
+  const api=createApi(config,async (url,options) => {
+    assert.equal(new URL(url).pathname,'/rest/v1/rpc/guitarhana_cancel_room_v1');
+    assert.deepEqual(JSON.parse(options.body),{p_id:'test-id',p_password:'wrong'});
+    return new Response(JSON.stringify('invalid_password'),{status:200});
+  });
+  assert.equal(await api.reservationCancel('test-id','wrong'),'invalid_password');
+  const broken=createApi(config,async ()=>new Response('{}',{status:200}));
+  await assert.rejects(broken.reservationCancel('test-id'));
+});
+
+test('password is optional and its length is bounded', () => {
+  assert.equal(reservationValues(valid,now).password,'');
+  assert.equal(reservationValues({...valid,password:'  secret  '},now).password,'  secret  ');
+  assert.throws(()=>reservationValues({...valid,password:'a'.repeat(129)},now));
 });
 
 test('overlap rejection is preserved when this request was not saved', async () => {

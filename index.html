@@ -22,8 +22,8 @@
   <meta name="twitter:image" content="https://kyunseok.github.io/guit/assets/share-preview-20261117.png">
   <meta name="twitter:image:alt" content="헤드폰을 쓰고 기타를 연주하는 토끼">
   <link rel="icon" href="guitLogo.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=share-compact-20261117">
-  <script type="module" src="app.js?v=room-monthly-20261117"></script>
+  <link rel="stylesheet" href="styles.css?v=room-timetable-20261118">
+  <script type="module" src="app.js?v=room-timetable-20261118"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -101,17 +101,40 @@
                 <div><label for="reservation-start">예약 시작 일시</label><input id="reservation-start" name="start" type="datetime-local" step="60" required></div>
                 <div><label for="reservation-end">예약 종료 일시</label><input id="reservation-end" name="end" type="datetime-local" step="60" required></div>
               </div>
+              <label for="reservation-password">비밀번호(선택)</label><input id="reservation-password" name="password" type="password" maxlength="128" autocomplete="new-password" aria-describedby="reservation-password-help">
+              <p id="reservation-password-help" class="muted">비워두면 누구나 예약을 취소할 수 있습니다.</p>
               <button id="reservation-submit" type="submit">예약하기</button>
             </fieldset>
           </form>
           <div id="reservation-status" role="status" aria-live="polite"></div>
         </div>
         <div id="reservation-list-panel" class="reservation-panel" hidden>
-          <div class="reservation-list-toolbar">
-            <div><label for="reservation-month">조회 월</label><input id="reservation-month" type="month" placeholder="YYYY-MM" required></div>
+          <div class="reservation-view-options" aria-label="예약 현황 보기 방식">
+            <button id="reservation-view-timetable" type="button" aria-pressed="true">시간표</button>
+            <button id="reservation-view-list" type="button" aria-pressed="false">월별 목록</button>
             <button id="reservation-refresh" type="button">새로고침</button>
           </div>
-          <div id="reservation-list" aria-live="polite"><p class="muted">예약 현황을 불러오는 중입니다.</p></div>
+          <div id="reservation-month-toolbar" class="reservation-list-toolbar" hidden>
+            <div id="reservation-month-field" hidden><label for="reservation-month">조회 월</label><input id="reservation-month" type="month" placeholder="YYYY-MM" required></div>
+          </div>
+          <output id="reservation-list-status" aria-live="polite"></output>
+          <div id="reservation-timetable-panel">
+            <div class="reservation-date-toolbar">
+              <button id="reservation-previous" type="button" aria-label="이전 주">이전</button>
+              <div><label for="reservation-date">조회 날짜</label><input id="reservation-date" type="date" required></div>
+              <button id="reservation-next" type="button" aria-label="다음 주">다음</button>
+              <button id="reservation-today" type="button">오늘</button>
+            </div>
+            <p id="reservation-period" class="muted"></p>
+            <p class="reservation-legend"><span>기타교실</span><span>합주연습</span></p>
+            <output id="reservation-timetable-status" aria-live="polite"></output>
+            <div id="reservation-timetable" class="reservation-timetable" aria-label="예약 시간표"></div>
+          </div>
+          <dialog id="reservation-detail" aria-labelledby="reservation-detail-title">
+            <div class="reservation-detail-header"><h3 id="reservation-detail-title">예약 상세</h3><button id="reservation-detail-close" type="button" aria-label="예약 상세 닫기">닫기</button></div>
+            <div id="reservation-detail-content"></div>
+          </dialog>
+          <div id="reservation-list" aria-live="polite" hidden><p class="muted">예약 현황을 불러오는 중입니다.</p></div>
         </div>
       </section>
       <section id="guitar-class" class="view" aria-label="기타교실" hidden>
