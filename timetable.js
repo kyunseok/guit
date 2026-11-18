@@ -111,7 +111,13 @@ export function initializeTimetable(onChange, onSelect) {
       });
       table.append(header, body);
       const key = current.from + ':' + current.days;
-      table.scrollTop = key === previousRange ? scroll : Math.max(0, (Math.min(...segments.flat().map(item => item.start), 9 * 60) / 60) * 56 - 28);
+      const starts = rows.map(row => {
+        const firstVisible = Math.max(new Date(row.starts_at).getTime(), new Date(current.from).getTime());
+        const local = new Date(firstVisible + OFFSET);
+        return local.getUTCHours() * 60 + local.getUTCMinutes();
+      });
+      const firstMinute = starts.length ? Math.min(...starts) : 9 * 60;
+      table.scrollTop = key === previousRange ? scroll : Math.max(0, firstMinute / 60 * 56 - 28);
       previousRange = key;
     }
   };
