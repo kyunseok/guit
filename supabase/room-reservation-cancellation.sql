@@ -28,13 +28,13 @@ begin
  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_id::text,0));
  select * into r from public.room_reservations where id=p_id;
  if found then
-  if r.cancelled_at is null and r.starts_at=p_start and r.ends_at=p_end and r.user_name=btrim(p_user) and r.purpose=p_purpose and r.people=p_people and r.has_password=(pwd<>'') then return p_id; end if;
+  if r.cancelled_at is null and r.starts_at=p_start and r.ends_at=p_end and r.user_name=btrim(p_user) and r.purpose=p_purpose and r.people=p_people and r.has_password=(char_length(pwd)>0) then return p_id; end if;
   raise exception using errcode='23505',message='Request already used';
  end if;
  if p_start is null or p_start<=now() then raise exception using errcode='42501',message='Start must be in the future'; end if;
  insert into public.room_reservations(id,starts_at,ends_at,user_name,purpose,people,has_password)
- values(p_id,p_start,p_end,btrim(p_user),p_purpose,p_people,pwd<>'');
- if pwd<>'' then
+ values(p_id,p_start,p_end,btrim(p_user),p_purpose,p_people,char_length(pwd)>0);
+ if char_length(pwd)>0 then
   insert into guitarhana_private.room_reservation_secrets(reservation_id,password_hash)
   values(p_id,extensions.crypt(encode(extensions.digest(pwd,'sha256'),'hex'),extensions.gen_salt('bf',10)));
  end if;
@@ -50,7 +50,7 @@ begin
  select * into r from public.room_reservations where id=p_id for update;
  if not found or r.cancelled_at is not null then return 'already_cancelled'; end if;
  if r.has_password then
-  if pwd='' then return 'password_required'; end if;
+  if char_length(pwd)=0 then return 'password_required'; end if;
   select * into s from guitarhana_private.room_reservation_secrets where reservation_id=p_id for update;
   if not found or s.password_hash is null then return 'unavailable'; end if;
   if s.locked_until>now() then return 'rate_limited'; end if;

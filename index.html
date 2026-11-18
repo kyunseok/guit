@@ -112,10 +112,10 @@
           <div class="reservation-view-options" aria-label="예약 현황 보기 방식">
             <button id="reservation-view-timetable" type="button" aria-pressed="true">시간표</button>
             <button id="reservation-view-list" type="button" aria-pressed="false">월별 목록</button>
-          </div>
-          <div class="reservation-list-toolbar">
-            <div id="reservation-month-field" hidden><label for="reservation-month">조회 월</label><input id="reservation-month" type="month" placeholder="YYYY-MM" required></div>
             <button id="reservation-refresh" type="button">새로고침</button>
+          </div>
+          <div id="reservation-month-toolbar" class="reservation-list-toolbar" hidden>
+            <div id="reservation-month-field" hidden><label for="reservation-month">조회 월</label><input id="reservation-month" type="month" placeholder="YYYY-MM" required></div>
           </div>
           <output id="reservation-list-status" aria-live="polite"></output>
           <div id="reservation-timetable-panel">
@@ -128,7 +128,7 @@
             <p id="reservation-period" class="muted"></p>
             <p class="reservation-legend"><span>기타교실</span><span>합주연습</span></p>
             <output id="reservation-timetable-status" aria-live="polite"></output>
-            <div id="reservation-timetable" class="reservation-timetable" tabindex="0" aria-label="예약 시간표"></div>
+            <div id="reservation-timetable" class="reservation-timetable" aria-label="예약 시간표"></div>
           </div>
           <dialog id="reservation-detail" aria-labelledby="reservation-detail-title">
             <div class="reservation-detail-header"><h3 id="reservation-detail-title">예약 상세</h3><button id="reservation-detail-close" type="button" aria-label="예약 상세 닫기">닫기</button></div>

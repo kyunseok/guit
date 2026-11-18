@@ -35,7 +35,12 @@ export function initializeTimetable(onChange, onSelect) {
     const current = range();
     $('reservation-previous').setAttribute('aria-label', mobile.matches ? '이전 날' : '이전 주');
     $('reservation-next').setAttribute('aria-label', mobile.matches ? '다음 날' : '다음 주');
-    $('reservation-period').textContent = current ? dayLabel.format(new Date(current.from)) + (mobile.matches ? '' : ' – ' + dayLabel.format(new Date(new Date(current.to).getTime() - DAY))) : '';
+    let label = '';
+    if (current) {
+      label = dayLabel.format(new Date(current.from));
+      if (!mobile.matches) label += ' – ' + dayLabel.format(new Date(new Date(current.to).getTime() - DAY));
+    }
+    $('reservation-period').textContent = label;
   }
   function change() { updatePeriod(); onChange(); }
   function move(direction) {
@@ -51,7 +56,10 @@ export function initializeTimetable(onChange, onSelect) {
   updatePeriod();
   return {
     range,
-    clear() { if (table.childElementCount) savedScroll = table.scrollTop; table.replaceChildren(); },
+    clear() {
+      if (table.childElementCount) savedScroll = table.scrollTop;
+      table.replaceChildren();
+    },
     render(rows) {
       const current = range();
       if (!current) return;

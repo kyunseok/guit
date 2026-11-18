@@ -205,6 +205,7 @@ export function initializeReservations(getApi) {
       $('reservation-timetable-panel').hidden = mode !== 'timetable';
       $('reservation-list').hidden = mode !== 'list';
       $('reservation-month-field').hidden = mode !== 'list';
+      $('reservation-month-toolbar').hidden = mode !== 'list';
       for (const value of ['timetable', 'list']) $('reservation-view-' + value).setAttribute('aria-pressed', String(value === mode));
       void refresh();
     });
