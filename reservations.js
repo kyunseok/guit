@@ -1,3 +1,5 @@
+import { initializeTimetable } from './timetable.js?v=room-timetable-20261118';
+
 const HOUR = 60 * 60 * 1000;
 const KST = 9 * HOUR;
 
@@ -45,6 +47,13 @@ export function initializeReservations(getApi) {
   const form = $('reservation-form'), fields = $('reservation-fields');
   const start = $('reservation-start'), end = $('reservation-end'), month = $('reservation-month');
   const submit = $('reservation-submit');
+  let display = 'timetable';
+  const dialog = $('reservation-detail');
+  $('reservation-detail-close').addEventListener('click', () => dialog.close());
+  const timetable = initializeTimetable(() => { if (display === 'timetable') void refresh(); }, row => {
+    $('reservation-detail-content').replaceChildren(createCard(row, 'detail'));
+    dialog.showModal();
+  });
   let visible = false, selected = 'book', connected = false, busy = false, request = 0, pending = null;
 
   function note(target, text, type = '') {
@@ -70,8 +79,11 @@ export function initializeReservations(getApi) {
       note('reservation-list', '이 달에는 등록된 예약이 없습니다.');
       return;
     }
+    for (const row of rows) list.append(createCard(row, 'list'));
+  }
+
+  function createCard(row, context) {
     const time = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-    for (const row of rows) {
       const card = document.createElement('article');
       card.className = 'reservation-card';
       const heading = document.createElement('h4');
@@ -86,12 +98,11 @@ export function initializeReservations(getApi) {
       user.className = 'reservation-user';
       user.textContent = '사용자: ' + (row.user_name || '미입력');
       card.append(heading, user, purpose, count);
-      addCancellation(card, row);
-      list.append(card);
-    }
+      addCancellation(card, row, context);
+    return card;
   }
 
-  function addCancellation(card, row) {
+  function addCancellation(card, row, context) {
     const action = document.createElement('button');
     action.type = 'button';
     action.className = 'reservation-cancel';
@@ -101,7 +112,7 @@ export function initializeReservations(getApi) {
     cancelForm.hidden = true;
     const label = document.createElement('label');
     const password = document.createElement('input');
-    password.id = 'cancel-password-' + row.id;
+    password.id = 'cancel-password-' + context + '-' + row.id;
     password.type = 'password';
     password.maxLength = 128;
     password.autocomplete = 'current-password';
@@ -118,9 +129,8 @@ export function initializeReservations(getApi) {
     const actions = document.createElement('div');
     actions.className = 'reservation-cancel-actions';
     actions.append(confirm, close);
-    const message = document.createElement('p');
+    const message = document.createElement('output');
     message.className = 'reservation-cancel-message';
-    message.setAttribute('role', 'status');
     let cancelling = false;
     function openPassword() {
       cancelForm.hidden = false;
@@ -144,6 +154,7 @@ export function initializeReservations(getApi) {
         if (result === 'cancelled' || result === 'already_cancelled') {
           password.value = '';
           note('reservation-list-status', '예약이 취소되었습니다.', 'success');
+          if (dialog.open) dialog.close();
           await refresh();
           if (visible && selected === 'list') $('reservation-refresh').focus({ preventScroll: true });
         } else if (result === 'password_required') {
@@ -161,8 +172,8 @@ export function initializeReservations(getApi) {
         if (!cancelForm.hidden && card.isConnected) password.focus();
       }
     }
-    action.addEventListener('click', () => row.has_password ? openPassword() : cancel(''));
-    cancelForm.addEventListener('submit', event => { event.preventDefault(); cancel(password.value); });
+    action.addEventListener('click', () => { if (row.has_password) openPassword(); else void cancel(''); });
+    cancelForm.addEventListener('submit', event => { event.preventDefault(); void cancel(password.value); });
     cancelForm.append(label, password, actions);
     card.append(action, cancelForm, message);
   }
@@ -170,15 +181,33 @@ export function initializeReservations(getApi) {
   async function refresh() {
     if (!visible || selected !== 'list' || !getApi()) return;
     const current = ++request;
-    const range = koreaMonthRange(month.value);
-    if (!range) { note('reservation-list', '조회할 연도와 월을 선택해 주세요.'); return; }
-    note('reservation-list', '예약 현황을 불러오는 중입니다.');
+    const target = display === 'timetable' ? 'reservation-timetable-status' : 'reservation-list';
+    const range = display === 'timetable' ? timetable.range() : koreaMonthRange(month.value);
+    if (display === 'timetable') timetable.clear();
+    if (!range) { note(target, '조회할 날짜를 선택해 주세요.'); return; }
+    note(target, '예약 현황을 불러오는 중입니다.');
     try {
       const rows = await getApi().reservationsList(range.from, range.to);
-      if (current === request && visible) render(rows);
+      if (current !== request || !visible) return;
+      if (display === 'timetable') {
+        $(target).replaceChildren();
+        if (!rows.length) note(target, '이 기간에는 등록된 예약이 없습니다.');
+        timetable.render(rows);
+      } else render(rows);
     } catch {
-      if (current === request && visible) note('reservation-list', '예약 현황을 불러오지 못했습니다. 새로고침을 눌러 다시 확인해 주세요.', 'error');
+      if (current === request && visible) note(target, '예약 현황을 불러오지 못했습니다. 새로고침을 눌러 다시 확인해 주세요.', 'error');
     }
+  }
+
+  for (const mode of ['timetable', 'list']) {
+    $('reservation-view-' + mode).addEventListener('click', () => {
+      display = mode;
+      $('reservation-timetable-panel').hidden = mode !== 'timetable';
+      $('reservation-list').hidden = mode !== 'list';
+      $('reservation-month-field').hidden = mode !== 'list';
+      for (const value of ['timetable', 'list']) $('reservation-view-' + value).setAttribute('aria-pressed', String(value === mode));
+      void refresh();
+    });
   }
 
   const initial = Math.ceil((Date.now() + 60000) / (30 * 60000)) * 30 * 60000;
@@ -194,12 +223,12 @@ export function initializeReservations(getApi) {
     if (Number.isFinite(time)) {
       if (!Number.isFinite(finish) || finish <= time || finish - time > 2 * HOUR) end.value = koreaInput(time + HOUR);
       month.value = start.value.slice(0, 7);
-      refresh();
+      void refresh();
     }
   });
-  month.addEventListener('change', refresh);
-  $('reservation-refresh').addEventListener('click', refresh);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { limits(); refresh(); } });
+  month.addEventListener('change', () => { void refresh(); });
+  $('reservation-refresh').addEventListener('click', () => { void refresh(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { limits(); void refresh(); } });
 
   form.addEventListener('submit', async event => {
     event.preventDefault();
@@ -243,22 +272,22 @@ export function initializeReservations(getApi) {
     show(value, tab) {
       const next = tab === 'list' ? 'list' : 'book';
       const entering = value && (!visible || selected !== next);
-      if (!value || selected !== next) request++;
+      if (!value || selected !== next) { request++; if (dialog.open) dialog.close(); }
       visible = value;
       selected = next;
       $('reservation-book-panel').hidden = next !== 'book';
       $('reservation-list-panel').hidden = next !== 'list';
-      $('reservation-title').textContent = next === 'list' ? '예약 현황' : '동방 예약';
+      $('reservation-title').textContent = next === 'list' ? '예약 현황' : '동방(4층홀) 예약';
       for (const link of $('reservation-nav').querySelectorAll('a')) {
         if (link.dataset.reservationTab === next) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
       }
-      if (entering) { limits(); refresh(); }
+      if (entering) { limits(); void refresh(); }
     },
     connect() {
       connected = Boolean(getApi());
       fields.disabled = !connected || busy;
-      if (connected) { $('reservation-status').replaceChildren(); refresh(); }
+      if (connected) { $('reservation-status').replaceChildren(); void refresh(); }
       else {
         note('reservation-status', '예약 기능에 연결하지 못했습니다. 페이지를 새로고침해 주세요.', 'error');
         note('reservation-list', '예약 현황에 연결하지 못했습니다.', 'error');

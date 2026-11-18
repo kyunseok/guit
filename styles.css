@@ -236,6 +236,44 @@ tbody tr:last-child td { border-bottom: 0; }
 .reservation-cancel-form { max-width: 320px; margin-top: 8px; }
 .reservation-cancel-form label { font-size: .8rem; margin: 0 0 6px; }
 .reservation-cancel-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-.reservation-cancel-actions button { padding: 5px 10px; min-height: 32px; font-size: .78rem; margin: 0 !important; }
+.reservation-card .reservation-cancel-actions button { padding: 5px 10px; min-height: 32px; font-size: .78rem; margin: 0; }
 .reservation-card .reservation-cancel-message { font-size: .78rem; margin: 6px 0 0; color: #8c3124; }
 .reservation-cancel-message:empty { display: none; }
+
+#reservation-list-status, #reservation-timetable-status { display: block; }
+.reservation-view-options { display: flex; gap: 8px; margin-bottom: 16px; }
+.reservation-view-options button { padding: 7px 14px; font-size: .85rem; }
+.reservation-view-options button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.reservation-date-toolbar { display: flex; align-items: end; gap: 8px; flex-wrap: wrap; }
+.reservation-date-toolbar > div { flex: 1 1 150px; }
+.reservation-date-toolbar label { margin-top: 0; }
+.reservation-date-toolbar button { padding: 9px 12px; font-size: .82rem; }
+#reservation-period { margin: 12px 0 8px; }
+.reservation-legend { display: flex; gap: 16px; font-size: .78rem; margin: 0 0 12px; }
+.reservation-legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 6px; background: #ead8c6; border: 1px solid #a36d3e; }
+.reservation-legend span + span::before { background: #dce8dc; border-color: #547354; }
+.reservation-timetable { border: 1px solid var(--border); max-height: 540px; overflow: auto; overscroll-behavior: contain; position: relative; }
+.reservation-timetable:empty { display: none; }
+.timetable-header, .timetable-body { display: grid; grid-template-columns: 48px repeat(var(--day-count), minmax(0, 1fr)); }
+.timetable-header { position: sticky; top: 0; z-index: 2; background: #fff; border-bottom: 1px solid var(--border); }
+.timetable-header span { padding: 10px 2px; text-align: center; font-size: .72rem; border-right: 1px solid var(--border); }
+.timetable-header .timetable-today { color: var(--accent); font-weight: 700; background: #faf4ee; }
+.timetable-body { height: 1344px; }
+.timetable-axis, .timetable-day { position: relative; min-width: 0; }
+.timetable-axis span { position: absolute; right: 6px; font-size: .65rem; color: #666; }
+.timetable-day { border-left: 1px solid var(--border); background: repeating-linear-gradient(to bottom, transparent 0, transparent 27px, #eee 27px, #eee 28px, transparent 28px, transparent 55px, #d8d2cc 55px, #d8d2cc 56px); }
+.timetable-day .timetable-booking { position: absolute; left: 2px; width: calc(100% - 4px); min-height: 2px; padding: 2px 3px; border-radius: 3px; text-align: left; white-space: pre-line; overflow: hidden; font-size: .67rem; line-height: 1.3; transition: filter .12s; }
+.timetable-day .lesson { background: #ead8c6; color: #44270e; border: 1px solid #a36d3e; }
+.timetable-day .practice { background: #dce8dc; color: #254325; border: 1px solid #547354; }
+.timetable-day .timetable-booking:hover { filter: brightness(.95); }
+.timetable-day .timetable-booking:focus-visible { z-index: 3; outline: 2px solid #222; outline-offset: 1px; min-height: 32px; }
+#reservation-detail { width: min(440px, calc(100% - 32px)); max-height: 85dvh; padding: 18px; border: 1px solid var(--accent); background: #fff; color: #222; overflow: auto; }
+#reservation-detail::backdrop { background: rgb(0 0 0 / 35%); }
+.reservation-detail-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.reservation-detail-header h3 { margin: 0; }
+.reservation-detail-header button { font-size: .8rem; padding: 5px 10px; }
+@media (max-width: 767px) {
+  .reservation-timetable { max-height: 470px; }
+  .timetable-day .timetable-booking { font-size: .8rem; padding: 3px 8px; }
+  .timetable-header span { font-size: .8rem; }
+}

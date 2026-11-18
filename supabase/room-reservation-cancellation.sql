@@ -34,8 +34,10 @@ begin
  if p_start is null or p_start<=now() then raise exception using errcode='42501',message='Start must be in the future'; end if;
  insert into public.room_reservations(id,starts_at,ends_at,user_name,purpose,people,has_password)
  values(p_id,p_start,p_end,btrim(p_user),p_purpose,p_people,pwd<>'');
- insert into guitarhana_private.room_reservation_secrets(reservation_id,password_hash)
- values(p_id,case when pwd='' then null else extensions.crypt(encode(extensions.digest(pwd,'sha256'),'hex'),extensions.gen_salt('bf',10)) end);
+ if pwd<>'' then
+  insert into guitarhana_private.room_reservation_secrets(reservation_id,password_hash)
+  values(p_id,extensions.crypt(encode(extensions.digest(pwd,'sha256'),'hex'),extensions.gen_salt('bf',10)));
+ end if;
  return p_id;
 end;
 $$;
@@ -53,11 +55,11 @@ begin
   if not found or s.password_hash is null then return 'unavailable'; end if;
   if s.locked_until>now() then return 'rate_limited'; end if;
   if extensions.crypt(encode(extensions.digest(pwd,'sha256'),'hex'),s.password_hash)<>s.password_hash then
-   update guitarhana_private.room_reservation_secrets set
-    failed_attempts=case when failed_attempts>=4 then 0 else failed_attempts+1 end,
-    locked_until=case when failed_attempts>=4 then now()+interval '5 minutes' else null end
-   where reservation_id=p_id;
-   if s.failed_attempts>=4 then return 'rate_limited'; end if;
+   if s.failed_attempts>=4 then
+    update guitarhana_private.room_reservation_secrets set failed_attempts=0, locked_until=now()+interval '5 minutes' where reservation_id=p_id;
+    return 'rate_limited';
+   end if;
+   update guitarhana_private.room_reservation_secrets set failed_attempts=failed_attempts+1 where reservation_id=p_id;
    return 'invalid_password';
   end if;
  end if;
