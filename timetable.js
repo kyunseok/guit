@@ -100,8 +100,12 @@ export function initializeTimetable(onChange, onSelect) {
           block.style.height = ((item.end - item.start) / 1440 * 100) + '%';
           const time = clockLabel.format(new Date(row.starts_at)) + '–' + clockLabel.format(new Date(row.ends_at));
           block.textContent = time + '\n' + row.purpose;
+          if (row.is_fixed) {
+            block.classList.add('fixed');
+            block.textContent = time + '\n고정 · ' + row.user_name;
+          }
           const description = dayLabel.format(new Date(row.starts_at)) + ' ' + time + ' ' + row.purpose + ', 사용자 ' + (row.user_name || '미입력') + ', ' + row.people + '명';
-          block.setAttribute('aria-label', description);
+          block.setAttribute('aria-label', (row.is_fixed ? '고정 일정, ' : '') + description);
           block.setAttribute('aria-haspopup', 'dialog');
           block.title = description;
           block.addEventListener('click', () => onSelect(row));
@@ -122,3 +126,4 @@ export function initializeTimetable(onChange, onSelect) {
     }
   };
 }
+

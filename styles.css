@@ -249,7 +249,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .reservation-date-toolbar label { margin-top: 0; }
 .reservation-date-toolbar button { padding: 9px 12px; font-size: .82rem; }
 #reservation-period { margin: 12px 0 8px; }
-.reservation-legend { display: flex; gap: 16px; font-size: .78rem; margin: 0 0 12px; }
+.reservation-legend { flex-wrap: wrap; display: flex; gap: 16px; font-size: .78rem; margin: 0 0 12px; }
 .reservation-legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 6px; background: #ead8c6; border: 1px solid #a36d3e; }
 .reservation-legend span + span::before { background: #dce8dc; border-color: #547354; }
 .reservation-timetable { border: 1px solid var(--border); max-height: 540px; overflow: auto; overscroll-behavior: contain; position: relative; }
@@ -286,3 +286,8 @@ tbody tr:last-child td { border-bottom: 0; }
   .reservation-date-toolbar button { padding: 8px; }
   .reservation-date-toolbar input { font-size: .8rem; padding: 10px 5px; }
 }
+
+
+.timetable-day .timetable-booking.fixed { background: #e6d6bd; border: 2px solid var(--accent); color: #44270e; }
+.reservation-card .reservation-fixed-label { color: var(--accent); font-size: .75rem; margin: 8px 0 0; font-weight: 650; }
+.reservation-legend .fixed-legend::before { background: #e6d6bd; border: 2px solid var(--accent); }

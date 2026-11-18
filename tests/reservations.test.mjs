@@ -92,3 +92,24 @@ test('monthly ranges use Korean midnight and handle year boundaries and leap yea
   }
   for (const value of ['', '2026-13', '2026-00', '2026-1', '2026-11-17']) assert.equal(koreaMonthRange(value),null);
 });
+
+
+test('booking timestamps explicitly include the Korean UTC offset', () => {
+  const value = reservationValues(valid, now);
+  assert.equal(value.starts_at, '2026-11-18T13:00:00+09:00');
+  assert.equal(value.ends_at, '2026-11-18T15:00:00+09:00');
+  assert.equal(Date.parse(value.starts_at), Date.parse('2026-11-18T04:00:00Z'));
+});
+
+test('fixed schedules are fetched for the requested interval and malformed rows are rejected', async () => {
+  const from='2026-11-17T15:00:00Z', to='2026-11-18T15:00:00Z';
+  const fixed={id:'fixed:3:2026-11-18',is_fixed:true,user_name:'기타교실 4조'};
+  const api=createApi(config,async (url,options)=>{
+    assert.equal(new URL(url).pathname,'/rest/v1/rpc/guitarhana_room_fixed_occurrences_v1');
+    assert.deepEqual(JSON.parse(options.body),{p_from:from,p_to:to});
+    return new Response(JSON.stringify([fixed]),{status:200});
+  });
+  assert.deepEqual(await api.fixedReservationsList(from,to),[fixed]);
+  const broken=createApi(config,async()=>new Response('[{}]',{status:200}));
+  await assert.rejects(broken.fixedReservationsList(from,to));
+});
