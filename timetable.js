@@ -24,28 +24,29 @@ export function timetableSegments(rows, range) {
   });
 }
 
-export function initializeTimetable(onChange, onSelect) {
+export function initializeTimetable(onChange, onSelect, isDaily = () => false) {
   const $ = id => document.getElementById(id);
   const date = $('reservation-date'), table = $('reservation-timetable');
   const mobile = window.matchMedia('(max-width: 767px)');
   let previousRange = '', savedScroll = 0;
   date.value = dateText(Date.now());
-  const range = () => timetableRange(date.value, mobile.matches);
+  const daily = () => mobile.matches || isDaily();
+  const range = () => timetableRange(date.value, daily());
   function updatePeriod() {
     const current = range();
-    $('reservation-previous').setAttribute('aria-label', mobile.matches ? '이전 날' : '이전 주');
-    $('reservation-next').setAttribute('aria-label', mobile.matches ? '다음 날' : '다음 주');
+    $('reservation-previous').setAttribute('aria-label', daily() ? '이전 날' : '이전 주');
+    $('reservation-next').setAttribute('aria-label', daily() ? '다음 날' : '다음 주');
     let label = '';
     if (current) {
       label = dayLabel.format(new Date(current.from));
-      if (!mobile.matches) label += ' – ' + dayLabel.format(new Date(new Date(current.to).getTime() - DAY));
+      if (!daily()) label += ' – ' + dayLabel.format(new Date(new Date(current.to).getTime() - DAY));
     }
     $('reservation-period').textContent = label;
   }
   function change() { updatePeriod(); onChange(); }
   function move(direction) {
     if (!range()) return;
-    date.value = dateText(new Date(date.value + 'T00:00:00+09:00').getTime() + direction * (mobile.matches ? 1 : 7) * DAY);
+    date.value = dateText(new Date(date.value + 'T00:00:00+09:00').getTime() + direction * (daily() ? 1 : 7) * DAY);
     change();
   }
   $('reservation-previous').addEventListener('click', () => move(-1));
@@ -56,6 +57,7 @@ export function initializeTimetable(onChange, onSelect) {
   updatePeriod();
   return {
     range,
+    updatePeriod,
     clear() {
       if (table.childElementCount) savedScroll = table.scrollTop;
       table.replaceChildren();
@@ -126,4 +128,5 @@ export function initializeTimetable(onChange, onSelect) {
     }
   };
 }
+
 
