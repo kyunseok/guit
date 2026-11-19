@@ -1,5 +1,6 @@
+import { renderSetlist } from "./setlist-view.js?v=mobile-design-20261119";
 import { assignInterviews, csvString, formatDate, slotsOf, publicFileUrl, createApi } from "./core.js?v=room-fixed-20261118";
-import { initializeReservations } from "./reservations.js?v=room-fixed-20261118";
+import { initializeReservations } from "./reservations.js?v=mobile-design-20261119";
 import { fetchSetlist } from "./setlists.js?v=sheet-tabs-20261114";
 
 import { initializeFeedback } from "./feedback.js?v=feedback-20261114";
@@ -283,7 +284,7 @@ function showView(moveFocus = false) {
   $("main").classList.toggle("with-tabs", hasTabs);
   $("side-tabs").hidden = !hasTabs;
   $("reservation-nav").hidden = view !== "room-reservation";
-  $("performance-nav").hidden = view !== "performances";
+  $("performance-navigation").hidden = view !== "performances";
   $("recruitment-nav").hidden = view !== "recruitment";
   $("semester-nav").hidden = !["schedule", "guitar-class"].includes(view);
   if (view === "schedule" || view === "guitar-class") showSemester(view, performance);
@@ -306,12 +307,16 @@ function showSemester(view, requested) {
 }
 
 function renderPerformances(performances) {
+  $("performance-select").addEventListener("change", event => { location.hash = "performances/" + event.target.value; });
   for (const performance of performances) {
     if (!/^[a-z-]+$/.test(performance.id)) continue;
     const link = element("a", performance.title);
     link.href = "#performances/" + performance.id;
     link.dataset.performance = performance.id;
     $("performance-nav").append(link);
+    const option = element("option", performance.title);
+    option.value = performance.id;
+    $("performance-select").append(option);
     const panel = element("section", undefined, "performance-panel");
     panel.id = "performance-" + performance.id;
     panel.hidden = true;
@@ -357,6 +362,7 @@ function showPerformance(requested, entering = false, requestedSheet) {
   }
   const item = performanceState.get(id);
   if (!item) return;
+  $("performance-select").value = id;
   const sheet = item.sheets.find(sheet => sheet.id === requestedSheet) || item.sheets[0];
   if (!sheet) return;
   const changedSheet = item.selectedSheet !== sheet.id;
@@ -390,53 +396,11 @@ async function loadSetlist(id) {
   try {
     const result = await fetchSetlist(item.sheetUrl, item.headerRow ?? 1);
     if (request !== item.request) return;
-    const wrapper = element("div", undefined, "table-scroll setlist-scroll");
-    wrapper.tabIndex = 0;
-    wrapper.setAttribute("role", "region");
-    wrapper.setAttribute("aria-label", item.title + " 셋리스트");
-    const table = element("table", undefined, "setlist-table");
-    const head = element("thead"), header = element("tr"), body = element("tbody");
-    const songColumn = item.songColumn ?? 1;
-    const visibleColumns = result.headers.map((label, index) => ({ label, index })).filter(({ label }) => label.replace(/\s/g, "") !== "구분");
-    for (const { label, index } of visibleColumns) {
-      const th = element("th", label, index === songColumn ? "setlist-song" : undefined);
-      th.scope = "col";
-      header.append(th);
-    }
-    head.append(header);
-    let group = "";
-    for (const row of result.rows) {
-      if (/^\d+\s*조$/.test(row[0]?.trim())) group = row[0].trim();
-      const songGroup = group;
-      if (!visibleColumns.some(({ index }) => row[index]?.trim())) continue;
-      const tr = element("tr");
-      for (const { index: column } of visibleColumns) {
-        const value = row[column] || "";
-        const cell = element("td", undefined, column === songColumn ? "setlist-song" : undefined);
-        if (column === songColumn && value.trim() && !/^예시/.test(row[0]?.trim())) {
-          const song = element("button", value, "song-feedback-link");
-          song.type = "button";
-          song.setAttribute("aria-label", value + " 피드백 보기 및 작성");
-          song.addEventListener("click", () => openFeedback({ title: value.trim(), performance: item.feedbackTitle, sheetUrl: item.sheetUrl, group: songGroup }, song));
-          cell.append(song);
-        } else if (/^https?:\/\/\S+$/.test(value)) {
-          const link = element("a", "링크 열기");
-          link.href = value;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          cell.append(link);
-        } else cell.textContent = value;
-        tr.append(cell);
-      }
-      body.append(tr);
-    }
-    table.append(head, body);
-    wrapper.append(table);
-    item.data.replaceChildren();
-    item.data.append(wrapper);
+    const rendered = renderSetlist(result, { songColumn: item.songColumn ?? 1, feedbackTitle: item.feedbackTitle, sheetUrl: item.sheetUrl }, openFeedback);
+    item.data.replaceChildren(rendered.root);
     item.loadedAt = Date.now();
     item.status.replaceChildren();
-    if (!body.children.length) item.status.append(element("p", "아직 입력된 셋리스트가 없습니다.", "muted"));
+    if (!rendered.count) item.status.append(element("p", "아직 입력된 셋리스트가 없습니다.", "muted"));
   } catch {
     if (request !== item.request) return;
     item.status.replaceChildren(element("p", item.loadedAt
@@ -566,6 +530,7 @@ async function initialize() {
 }
 
 initialize();
+
 
 
 
