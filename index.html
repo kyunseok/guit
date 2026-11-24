@@ -21,9 +21,12 @@
   <meta name="twitter:description" content="기타하나 동아리 소개, 일정, 동방 예약, 기타교실, 셋리스트와 신입부원 모집">
   <meta name="twitter:image" content="https://kyunseok.github.io/guit/assets/share-preview-20261117.png">
   <meta name="twitter:image:alt" content="헤드폰을 쓰고 기타를 연주하는 토끼">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="guitLogo.png">
+  <meta name="apple-mobile-web-app-title" content="기타하나">
   <link rel="icon" href="guitLogo.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=mobile-design-20261119">
-  <script type="module" src="app.js?v=mobile-design-20261119"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 이동</a>
@@ -52,6 +55,11 @@
         <a href="#recruitment" data-view="recruitment">신입부원 모집</a>
       </nav>
     </header>
+    <p id="offline-status" class="notice warning" role="status" hidden>오프라인입니다. 저장된 화면을 표시하며 예약·취소·지원서·피드백과 최신 셋리스트 조회에는 인터넷 연결이 필요합니다. PDF는 오프라인으로 저장되지 않습니다.</p>
+    <div id="update-status" class="notice app-update" role="status" hidden>
+      <p>새 버전이 준비되었습니다. 새로고침하면 입력 중인 내용이 초기화됩니다.</p>
+      <button id="update-app" type="button">지금 새로고침</button>
+    </div>
     <main id="main" tabindex="-1">
       <aside id="side-tabs" hidden>
         <nav id="reservation-nav" class="section-tabs" aria-label="동방(4층홀) 예약" hidden>
@@ -196,6 +204,7 @@
       </section>
       </div>
     </main>
+    <footer class="site-footer"><button id="install-app" type="button">앱 설치</button></footer>
     <noscript><p class="notice">메뉴와 모집 기능을 사용하려면 브라우저에서 JavaScript를 허용해 주세요.</p></noscript>
   </div>
   <dialog id="feedback-dialog" aria-labelledby="feedback-title">
@@ -216,11 +225,12 @@
     </form>
     <div id="feedback-submit-status" role="status" aria-live="polite"></div>
   </dialog>
+  <dialog id="install-help" aria-labelledby="install-help-title">
+    <div class="feedback-header"><h2 id="install-help-title">앱 설치</h2><button id="install-help-close" type="button">닫기</button></div>
+    <p>아이폰에서는 Safari의 공유 메뉴에서 ‘홈 화면에 추가’를 선택하세요. 안드로이드에서는 Chrome 메뉴의 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 선택하세요.</p>
+    <p>컴퓨터에서는 브라우저 주소창의 설치 아이콘이나 메뉴를 이용할 수 있습니다. 메뉴 이름과 지원 여부는 브라우저에 따라 다릅니다.</p>
+    <p class="muted">설치 후에도 예약·취소·지원서·피드백과 최신 셋리스트에는 인터넷 연결이 필요합니다.</p>
+    <p id="install-help-status" role="status"></p>
+  </dialog>
 </body>
 </html>
-
-
-
-
-
-

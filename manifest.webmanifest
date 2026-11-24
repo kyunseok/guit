@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "기타하나",
+  "short_name": "기타하나",
+  "description": "기타하나 일정, 동방 예약, 셋리스트와 정모 자료",
+  "lang": "ko",
+  "start_url": "./#about",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#854819",
+  "icons": [
+    {
+      "src": "guitLogo.png",
+      "sizes": "932x932",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

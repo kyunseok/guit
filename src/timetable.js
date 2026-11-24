@@ -128,5 +128,3 @@ export function initializeTimetable(onChange, onSelect, isDaily = () => false) {
     }
   };
 }
-
-

@@ -1,4 +1,5 @@
 import json
+import hashlib
 import shutil
 from pathlib import Path
 from urllib.parse import quote, urlsplit
@@ -51,8 +52,10 @@ assert isinstance(content["interviewSlots"], list)
 if OUT.exists():
     shutil.rmtree(OUT)
 OUT.mkdir()
-for name in ("index.html", "styles.css", "app.js", "core.js", "setlists.js", "setlist-view.js", "feedback.js", "reservations.js", "timetable.js", "guitLogo.png"):
+for name in ("index.html", "styles.css", "app.js", "manifest.webmanifest", "guitLogo.png"):
     copy(ROOT / name, OUT / name)
+for module in sorted((ROOT / "src").rglob("*.js")):
+    copy(module, OUT / module.relative_to(ROOT))
 copy(ROOT / "data/content.json", OUT / "data/content.json")
 copy(ROOT / "assets/cleantheroom.png", OUT / "assets/cleantheroom.png")
 copy(ROOT / "assets/share-preview-20261117.png", OUT / "assets/share-preview-20261117.png")
@@ -93,8 +96,31 @@ materials.sort(key=lambda item: item.get("week", -1), reverse=True)
 
 for name, value in (("calendar", calendar), ("materials", materials)):
     (OUT / "data" / (name + ".json")).write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
+
+digest = hashlib.sha256((ROOT / "sw.js").read_bytes())
+for file in sorted(OUT.rglob("*")):
+    if file.is_file():
+        digest.update(file.relative_to(OUT).as_posix().encode())
+        digest.update(b"\0")
+        digest.update(file.read_bytes())
+        digest.update(b"\0")
+version = digest.hexdigest()[:16]
+imports = re.compile(r"((?:\bfrom\s+|\bimport\s*)[\"'])(\.[^\"']+\.js)([\"'])")
+for module in OUT.rglob("*.js"):
+    module.write_text(imports.sub(lambda match: match[1] + match[2] + "?v=" + version + match[3], module.read_text()))
+html = (OUT / "index.html").read_text()
+html = html.replace('href="styles.css"', f'href="styles.css?v={version}"').replace('src="app.js"', f'src="app.js?v={version}"')
+(OUT / "index.html").write_text(html)
+shell = []
+for file in sorted(OUT.rglob("*")):
+    if not file.is_file() or file.suffix.lower() == ".pdf":
+        continue
+    relative = file.relative_to(OUT).as_posix()
+    if relative == "assets/share-preview-20261117.png":
+        continue
+    path = quote(relative, safe="/")
+    shell.append(path + ("?v=" + version if file.suffix in (".js", ".css") else ""))
+worker = (ROOT / "sw.js").read_text().replace("__BUILD_VERSION__", version).replace("__SHELL_FILES__", json.dumps(shell, ensure_ascii=False))
+(OUT / "sw.js").write_text(worker)
 (OUT / ".nojekyll").touch()
-print(f"Built dist/: {sum(bool(item.get('path')) for item in materials)} PDF(s), calendar={'yes' if calendar else 'no'}")
-
-
-
+print(f"Built dist/{version}: {sum(bool(item.get('path')) for item in materials)} PDF(s), calendar={'yes' if calendar else 'no'}")

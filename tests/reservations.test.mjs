@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { koreaInput, koreaTime, koreaMonthRange, reservationValues, reservationsOverlap } from '../reservations.js';
-import { createApi } from '../core.js';
+import { koreaInput, koreaTime, koreaMonthRange, reservationValues, reservationsOverlap } from '../src/reservation-rules.js';
+import { createApi } from '../src/api.js';
 
 const now = Date.parse('2026-11-17T00:00:00Z');
 const valid = { start: '2026-11-18T13:00', end: '2026-11-18T15:00', user_name: '테스트 사용자', purpose: '합주연습', people: '3' };
@@ -113,3 +113,4 @@ test('fixed schedules are fetched for the requested interval and malformed rows 
   const broken=createApi(config,async()=>new Response('[{}]',{status:200}));
   await assert.rejects(broken.fixedReservationsList(from,to));
 });
+
