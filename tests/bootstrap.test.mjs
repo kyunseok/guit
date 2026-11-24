@@ -1,0 +1,80 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { JSDOM } from 'jsdom';
+
+const tick = () => new Promise(resolve => setTimeout(resolve, 15));
+
+test('the composed app routes every section and keeps recruitment administration inside lookup', async () => {
+  const dom = new JSDOM(await readFile(new URL('../index.html', import.meta.url), 'utf8'), { url: 'https://example.test/guit/#schedule', pretendToBeVisual: true });
+  const content = JSON.parse(await readFile(new URL('../data/content.json', import.meta.url), 'utf8'));
+  globalThis.window = dom.window;
+  globalThis.document = dom.window.document;
+  globalThis.location = dom.window.location;
+  globalThis.FormData = dom.window.FormData;
+  globalThis.getComputedStyle = dom.window.getComputedStyle;
+  globalThis.requestAnimationFrame = callback => callback();
+  globalThis.ResizeObserver = class { observe() {} };
+  Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true });
+  Object.defineProperty(document, 'fonts', { value: { ready: Promise.resolve() } });
+  window.matchMedia = () => ({ matches: false, addEventListener() {} });
+  window.HTMLDialogElement.prototype.showModal = function() { this.open = true; };
+  window.HTMLDialogElement.prototype.close = function() { this.open = false; };
+  const calls = [];
+  globalThis.fetch = async (input, options = {}) => {
+    const url = new URL(input);
+    calls.push(url.href);
+    let data;
+    if (url.pathname.endsWith('/content.json')) data = content;
+    else if (url.pathname.endsWith('/config.json')) data = { supabaseUrl: 'https://database.test', supabasePublishableKey: 'sb_publishable_mock_test_only' };
+    else if (url.pathname.endsWith('/calendar.json')) data = { path: 'assets/calendar.png' };
+    else if (url.pathname.endsWith('/materials.json')) data = [{ title: '정모 자료', path: 'materials/test.pdf', name: 'test.pdf', size: 2000 }];
+    else if (url.hostname === 'docs.google.com') return new Response('안내\n구분,곡명,가수\n1조,테스트곡,테스트가수');
+    else if (url.pathname.endsWith('/guitarhana_admin_applicants_v1')) {
+      const password = JSON.parse(options.body).p_password;
+      if (password !== 'test-only') return Response.json({ code: '42501' }, { status: 403 });
+      data = { total: 1, rows: [{ id: 'ABC123', name: '<img src=x>', student_id: '123', phone: '010', motive: '연주', interview_slots: [{ interview_time: '월요일' }], created_at: '2026-11-01T00:00:00Z' }] };
+    } else throw new Error('Unexpected fetch: ' + url);
+    return Response.json(data);
+  };
+  await import('../app.js');
+  await tick();
+  const $ = id => document.getElementById(id);
+  assert.equal($('introduction').textContent, content.introduction);
+  assert.equal($('schedule').hidden, false);
+  assert.equal($('calendar-container').querySelector('img').loading, 'lazy');
+  assert.equal($('materials-list').querySelector('iframe'), null);
+  $('materials-list').querySelector('button').click();
+  assert.match($('materials-list').querySelector('iframe').src, /materials\/test\.pdf/);
+  for (const view of ['about', 'schedule/27-1', 'guitar-class/26-2', 'room-reservation/book', 'performances', 'recruitment']) {
+    location.hash = view;
+    await tick();
+    assert.equal($(view.split('/')[0]).hidden, false);
+  }
+  assert.equal($('application-fields').disabled, false);
+  assert.equal($('apply-panel').hidden, false);
+  assert.equal($('lookup-panel').hidden, true);
+  assert.ok($('lookup-panel').contains($('admin-login-form')));
+  assert.equal(calls.some(url => url.includes('admin_applicants')), false);
+  $('lookup-tab').click();
+  assert.equal($('lookup-panel').hidden, false);
+  $('admin-password').value = 'wrong';
+  $('admin-login-form').dispatchEvent(new window.Event('submit', { cancelable: true }));
+  await tick();
+  assert.equal($('admin-panel').hidden, true);
+  assert.match($('admin-login-status').textContent, /올바르지/);
+  $('admin-password').value = 'test-only';
+  $('admin-login-form').dispatchEvent(new window.Event('submit', { cancelable: true }));
+  await tick();
+  assert.equal($('admin-panel').hidden, false);
+  assert.equal($('admin-password').value, '');
+  assert.equal($('applicants-table').querySelector('img'), null);
+  $('assign-interviews').click();
+  assert.equal($('assignment-result').hidden, false);
+  $('apply-tab').click();
+  assert.equal($('lookup-panel').hidden, true);
+  assert.equal(window.localStorage.length, 0);
+  $('install-app').click();
+  assert.equal($('install-help').open, true);
+  dom.window.close();
+});

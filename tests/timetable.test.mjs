@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { timetableRange, timetableSegments } from '../timetable.js';
+import { timetableRange, timetableSegments } from '../src/timetable.js';
 
 test('weekly and daily views use Korean dates across year boundaries', () => {
   assert.deepEqual(timetableRange('2027-01-01'), { from: '2026-12-27T15:00:00.000Z', to: '2027-01-03T15:00:00.000Z', days: 7 });
@@ -19,3 +19,4 @@ test('midnight bookings split into correct days without duplicating touching end
   const midnight = { ...row, ends_at: '2026-11-19T00:00:00+09:00' };
   assert.deepEqual(timetableSegments([midnight], timetableRange('2026-11-19', true)), [[]]);
 });
+

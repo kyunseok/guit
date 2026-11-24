@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { reservationTimes, reservationValues } from '../reservations.js';
-import { setlistEntries } from '../setlist-view.js';
+import { reservationTimes, reservationValues } from '../src/reservation-rules.js';
+import { setlistEntries } from '../src/setlist-view.js';
 
 test('one date and two times preserve KST and roll over across month and year boundaries', () => {
   assert.deepEqual(reservationTimes('2026-12-31', '23:30', '01:30'), { start: '2026-12-31T23:30', end: '2027-01-01T01:30', nextDay: true });
@@ -25,3 +25,4 @@ test('mobile and desktop entries retain feedback groups even when group-only row
   assert.deepEqual(result.entries.map(entry => entry.example), [false, true, false]);
   assert.equal(result.entries[0].row[1], result.entries[2].row[1]);
 });
+
