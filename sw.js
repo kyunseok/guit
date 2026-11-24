@@ -3,7 +3,12 @@ const FILES = __SHELL_FILES__;
 const PREFIX = "guitarhana:" + self.registration.scope;
 const CACHE = PREFIX + VERSION;
 const urls = new Set(FILES.map(path => new URL(path, self.registration.scope).href));
-const indexUrl = new URL("index.html", self.registration.scope).href;
+const unversioned = new Map([...urls].map(href => {
+  const url = new URL(href);
+  url.search = "";
+  return [url.href, href];
+}));
+const indexUrl = new URL("index.html?v=" + VERSION, self.registration.scope).href;
 
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
@@ -31,8 +36,8 @@ self.addEventListener("fetch", event => {
   const root = new URL(self.registration.scope);
   if (url.origin !== root.origin) return;
   const navigation = request.mode === "navigate" && (url.pathname === root.pathname || url.pathname === new URL(indexUrl).pathname);
-  const target = navigation ? indexUrl : request.url;
-  if (!navigation && !urls.has(target)) return;
+  const target = navigation ? indexUrl : urls.has(request.url) ? request.url : !url.search ? unversioned.get(url.href) : undefined;
+  if (!target) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     return await cache.match(target) || fetch(request);

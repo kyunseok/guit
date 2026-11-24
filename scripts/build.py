@@ -119,7 +119,7 @@ for file in sorted(OUT.rglob("*")):
     if relative == "assets/share-preview-20261117.png":
         continue
     path = quote(relative, safe="/")
-    shell.append(path + ("?v=" + version if file.suffix in (".js", ".css") else ""))
+    shell.append(path + "?v=" + version)
 worker = (ROOT / "sw.js").read_text().replace("__BUILD_VERSION__", version).replace("__SHELL_FILES__", json.dumps(shell, ensure_ascii=False))
 (OUT / "sw.js").write_text(worker)
 (OUT / ".nojekyll").touch()

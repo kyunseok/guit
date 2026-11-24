@@ -58,7 +58,10 @@ test('manifest and offline shell stay within scope, retain the original logo and
     assert.ok(!file.endsWith('.pdf'));
     await stat(path.join(out, decodeURIComponent(file.split('?')[0])));
   }
-  assert.ok(shell.includes('index.html'));
+  assert.ok(shell.some(file => file.startsWith('index.html?v=')));
+  const versions = new Set(shell.map(file => new URL(file, 'https://example.test/guit/').searchParams.get('v')));
+  assert.equal(versions.size, 1);
+  assert.ok([...versions][0]);
   const materials = JSON.parse(await read('data/materials.json'));
   const originals = (await readdir(path.join(root, 'materials'))).filter(name => name.toLowerCase().endsWith('.pdf'));
   assert.equal(materials.filter(item => item.path).length, originals.length);
