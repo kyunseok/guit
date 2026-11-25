@@ -21,9 +21,26 @@ function calendarImage(target, image, semester, warning = '') {
   target.append(figure);
 }
 
+function eventCard(event) {
+  const card = element('article', undefined, 'calendar-event');
+  card.append(element('h4', event.title));
+  const info = element('dl');
+  const time = event.startTime ? event.startTime + (event.endTime ? ' – ' + event.endTime : '') : '미정';
+  info.append(element('dt', '시간'), element('dd', time + (event.startTime ? ' (한국 시간)' : '')), element('dt', '장소'), element('dd', event.location || '미정'));
+  card.append(info);
+  if (event.notes) card.append(element('p', event.notes, 'calendar-event-notes'));
+  return card;
+}
+
 export function renderCalendar(target, events, image, semester, today = koreaInput().slice(0, 10)) {
-  const rows = events.filter(event => event.semester === semester);
-  if (!rows.length) { calendarImage(target, image, semester); return; }
+  const semesterEvents = events.filter(event => event.semester === semester);
+  const rows = semesterEvents.filter(event => event.date);
+  const pending = element('details', undefined, 'calendar-pending');
+  const undated = semesterEvents.filter(event => !event.date);
+  pending.hidden = !undated.length;
+  pending.append(element('summary', '날짜 미정 일정 · ' + undated.length + '개'));
+  for (const event of undated) pending.append(eventCard(event));
+  if (!rows.length) { calendarImage(target, image, semester); target.append(pending); return; }
   let selected = initialDate(rows, today);
   let month = selected.slice(0, 7);
   const byDate = new Map();
@@ -58,22 +75,54 @@ export function renderCalendar(target, events, image, semester, today = koreaInp
   detail.id = 'calendar-details-' + semester;
   detail.setAttribute('aria-live', 'polite');
   detail.setAttribute('aria-label', '선택한 날짜의 일정');
-  target.replaceChildren(toolbar, summary, table, detail);
+  const layout = element('div', undefined, 'calendar-layout');
+  const grid = element('div', undefined, 'calendar-grid');
+  grid.append(table);
+  layout.append(grid, detail);
+  const agenda = element('section', undefined, 'calendar-agenda');
+  agenda.hidden = true;
+  agenda.setAttribute('aria-label', '월별 일정 목록');
+  const options = element('div', undefined, 'calendar-view-options');
+  options.setAttribute('aria-label', '일정 보기 방식');
+  const views = ['달력 보기', '목록 보기'].map((label, index) => {
+    const button = element('button', label);
+    button.type = 'button';
+    button.setAttribute('aria-pressed', String(index === 0));
+    button.addEventListener('click', () => {
+      layout.hidden = index === 1;
+      agenda.hidden = index === 0;
+      views.forEach((item, i) => item.setAttribute('aria-pressed', String(i === index)));
+    });
+    options.append(button);
+    return button;
+  });
+  target.replaceChildren(options, toolbar, summary, layout, agenda, pending);
 
   function showDetails() {
     detail.replaceChildren(element('h3', dayLabel.format(new Date(selected + 'T00:00:00+09:00'))));
     const selectedEvents = byDate.get(selected) || [];
     if (!selectedEvents.length) { detail.append(element('p', '등록된 일정이 없습니다.', 'muted')); return; }
-    for (const event of selectedEvents) {
-      const card = element('article', undefined, 'calendar-event');
-      card.append(element('h4', event.title));
-      const info = element('dl');
-      const time = event.startTime ? event.startTime + (event.endTime ? ' – ' + event.endTime : '') : '미정';
-      info.append(element('dt', '시간'), element('dd', time + (event.startTime ? ' (한국 시간)' : '')), element('dt', '장소'), element('dd', event.location || '미정'));
-      card.append(info);
-      if (event.notes) card.append(element('p', event.notes, 'calendar-event-notes'));
-      detail.append(card);
+    for (const event of selectedEvents) detail.append(eventCard(event));
+  }
+
+  function renderAgenda() {
+    agenda.replaceChildren();
+    const dates = [...byDate.keys()].filter(date => date.startsWith(month)).sort();
+    if (!dates.length) { agenda.append(element('p', '이 달에는 등록된 일정이 없습니다.', 'notice')); return; }
+    let previous = null;
+    for (const date of dates) {
+      const day = element('section', undefined, 'agenda-day');
+      day.append(element('h3', dayLabel.format(new Date(date + 'T00:00:00+09:00'))));
+      for (const event of byDate.get(date)) day.append(eventCard(event));
+      if (date < today && month === today.slice(0, 7)) {
+        if (!previous) {
+          previous = element('details', undefined, 'agenda-past');
+          previous.append(element('summary', '지난 일정 보기'));
+        }
+        previous.append(day);
+      } else agenda.append(day);
     }
+    if (previous) agenda.append(previous);
   }
 
   function select(date, focus = false) {
@@ -132,6 +181,7 @@ export function renderCalendar(target, events, image, semester, today = koreaInp
       body.append(week);
     }
     showDetails();
+    renderAgenda();
   }
 
   function changeMonth(value) {

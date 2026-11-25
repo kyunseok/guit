@@ -7,10 +7,26 @@ export function initializeReservations(getApi) {
   const start = $('reservation-start'), end = $('reservation-end'), month = $('reservation-month');
   const submit = $('reservation-submit');
   const bookDate = $('reservation-book-date');
-  let display = window.matchMedia('(max-width: 767px)').matches ? 'day' : 'timetable';
+  let display = 'timetable';
   const dialog = $('reservation-detail');
   $('reservation-detail-close').addEventListener('click', () => dialog.close());
-  const timetable = initializeTimetable(() => { if (display !== 'list') void refresh(); }, openDetail, () => display === 'day');
+  const timetable = initializeTimetable(() => { if (display !== 'list') void refresh(); }, openDetail, () => display === 'day', bookSlot);
+
+  function bookSlot(row) {
+    if (busy || !connected) return;
+    if (Date.parse(row.starts_at) <= Date.now()) {
+      note('reservation-list-status', '선택한 시각이 지났습니다. 새로고침 후 다른 시간을 선택해 주세요.', 'error');
+      return;
+    }
+    bookDate.value = koreaInput(row.starts_at).slice(0, 10);
+    start.value = koreaInput(row.starts_at).slice(11);
+    end.value = koreaInput(row.ends_at).slice(11);
+    limits();
+    $('reservation-prefill').hidden = false;
+    $('reservation-prefill').textContent = bookDate.value + ' · ' + start.value + ' – ' + end.value + ' 선택됨. 내용을 확인한 뒤 예약하기를 눌러 주세요.';
+    $('reservation-status').replaceChildren();
+    window.location.hash = 'room-reservation/book';
+  }
 
   function openDetail(row) {
     $('reservation-detail-content').replaceChildren(createCard(row, 'detail'));
@@ -229,7 +245,7 @@ export function initializeReservations(getApi) {
   limits();
   fields.disabled = true;
 
-  for (const input of [bookDate, start, end]) input.addEventListener('change', limits);
+  for (const input of [bookDate, start, end]) input.addEventListener('change', () => { $('reservation-prefill').hidden = true; limits(); });
   month.addEventListener('change', () => { void refresh(); });
   $('reservation-refresh').addEventListener('click', () => { void refresh(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { limits(); void refresh(); } });
@@ -251,6 +267,7 @@ export function initializeReservations(getApi) {
     try {
       await getApi().reservationSubmit({ id, ...values });
       pending = null;
+      $('reservation-prefill').hidden = true;
       note('reservation-status', '예약이 완료되었습니다.', 'success');
       $('reservation-purpose').value = '';
       $('reservation-password').value = '';

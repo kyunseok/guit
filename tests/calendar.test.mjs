@@ -49,7 +49,7 @@ test('dated events replace the image and date selection reveals time and place s
   assert.equal(target.querySelector('input').value, '2026-12');
   target.querySelector('[data-date="2026-12-31"]').dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
   assert.equal(target.querySelector('input').value, '2027-01');
-  assert.equal(target.querySelector('[aria-pressed="true"]').dataset.date, '2027-01-01');
+  assert.equal(target.querySelector('.calendar-day[aria-pressed="true"]').dataset.date, '2027-01-01');
   dom.window.close();
 });
 
@@ -72,11 +72,33 @@ test('linked Slides offer direct PDF export without loading an embedded document
   globalThis.fetch = async () => Response.json([{ title: '10주차 정모', url: 'https://docs.google.com/presentation/d/example_id/edit?usp=sharing' }]);
   await loadMaterials();
   const links = [...document.querySelectorAll('a')];
-  assert.equal(links[0].textContent, '링크');
+  assert.equal(links[0].textContent, '자료 열기');
   assert.equal(links[1].href, 'https://docs.google.com/presentation/d/example_id/export/pdf');
   assert.equal(document.querySelector('iframe'), null);
   assert.equal(slidesPdfUrl('https://evil.test/presentation/d/example/edit'), null);
   assert.equal(slidesPdfUrl('https://docs.google.com.evil.test/presentation/d/example/edit'), null);
   assert.equal(slidesPdfUrl('javascript:alert(1)'), null);
+  dom.window.close();
+});
+
+test('calendar and agenda share event data, retaining undated notes and past entries', () => {
+  const dom = new JSDOM('<div id="calendar"></div>', { url: 'https://example.test/guit/' });
+  globalThis.document = dom.window.document;
+  const target = document.getElementById('calendar');
+  const data = validateEvents([...events, { id: 'past', semester: '26-2', date: '2026-11-01', title: '지난 행사' }, { id: 'pending', semester: '26-2', date: null, title: '중간고사', notes: '8주차' }]);
+  renderCalendar(target, data, null, '26-2', '2026-11-24');
+  target.querySelectorAll('.calendar-view-options button')[1].click();
+  assert.equal(target.querySelector('.calendar-layout').hidden, true);
+  const agenda = target.querySelector('.calendar-agenda');
+  assert.equal(agenda.hidden, false);
+  assert.match(agenda.textContent, /18:00 – 19:00/);
+  assert.match(agenda.querySelector('.agenda-past').textContent, /지난 행사/);
+  assert.match(target.querySelector('.calendar-pending').textContent, /중간고사.*8주차/);
+  target.querySelector('[aria-label="다음 달"]').click();
+  assert.match(agenda.textContent, /이 달에는 등록된 일정이 없습니다/);
+  assert.throws(() => validateEvents([{ id: 'invalid', semester: '26-2', date: null, title: '날짜 없음', startTime: '18:00' }]));
+  renderCalendar(target, data.filter(event => !event.date), { path: 'assets/calendar.png' }, '26-2');
+  assert.ok(target.querySelector('img'));
+  assert.match(target.textContent, /중간고사/);
   dom.window.close();
 });

@@ -46,7 +46,6 @@ else:
 
 content = json.loads((ROOT / "data/content.json").read_text())
 assert isinstance(content["introduction"], str)
-assert isinstance(content["schedule"], list)
 events = json.loads((ROOT / "data/events.json").read_text())
 assert isinstance(events, list)
 

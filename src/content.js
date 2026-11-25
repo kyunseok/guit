@@ -11,7 +11,7 @@ export async function loadMaterials() {
       const card = element("article", undefined, "material-card");
       card.append(element("p", file.title, "material-title"));
       if (file.url) {
-        const online = element("a", "링크");
+        const online = element("a", "자료 열기");
         const url = new URL(file.url);
         if (url.protocol !== "https:") throw new Error("LINK");
         online.href = url.href;
@@ -116,11 +116,6 @@ function renderGuitarClasses(groups) {
 
 export function renderContent(content) {
   $("introduction").textContent = content.introduction;
-  for (const item of content.schedule) {
-    const li = element("li");
-    li.append(element("strong", item.week + ":"), document.createTextNode(" " + item.text));
-    $("schedule-list").append(li);
-  }
   if (Array.isArray(content.guitarClasses) && content.guitarClasses.length) renderGuitarClasses(content.guitarClasses);
   else message("guitar-class-content", "아직 등록된 기타교실 정보가 없습니다.");
 }
