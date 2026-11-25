@@ -1,3 +1,4 @@
+import { availableSlots } from './availability.js';
 const DAY = 86400000;
 const OFFSET = 9 * 3600000;
 const dateText = time => new Date(time + OFFSET).toISOString().slice(0, 10);
@@ -24,11 +25,12 @@ export function timetableSegments(rows, range) {
   });
 }
 
-export function initializeTimetable(onChange, onSelect, isDaily = () => false) {
+export function initializeTimetable(onChange, onSelect, isDaily = () => false, onBook = () => {}) {
   const $ = id => document.getElementById(id);
   const date = $('reservation-date'), table = $('reservation-timetable');
   const mobile = window.matchMedia('(max-width: 767px)');
   let previousRange = '', savedScroll = 0;
+  let clockTimer = null;
   date.value = dateText(Date.now());
   const daily = () => mobile.matches || isDaily();
   const range = () => timetableRange(date.value, daily());
@@ -59,10 +61,12 @@ export function initializeTimetable(onChange, onSelect, isDaily = () => false) {
     range,
     updatePeriod,
     clear() {
+      window.clearInterval(clockTimer);
       if (table.childElementCount) savedScroll = table.scrollTop;
       table.replaceChildren();
     },
     render(rows) {
+      window.clearInterval(clockTimer);
       const current = range();
       if (!current) return;
       const scroll = table.childElementCount ? table.scrollTop : savedScroll;
@@ -85,6 +89,7 @@ export function initializeTimetable(onChange, onSelect, isDaily = () => false) {
       }
       body.append(axis);
       const segments = timetableSegments(rows, current);
+      const available = timetableSegments(availableSlots(rows, current), current);
       segments.forEach((bookings, day) => {
         const timestamp = new Date(current.from).getTime() + day * DAY;
         const heading = document.createElement('span');
@@ -93,6 +98,19 @@ export function initializeTimetable(onChange, onSelect, isDaily = () => false) {
         header.append(heading);
         const column = document.createElement('div');
         column.className = 'timetable-day';
+        for (const item of available[day]) {
+          const slot = document.createElement('button');
+          slot.type = 'button';
+          slot.dataset.startsAt = item.row.starts_at;
+          slot.className = 'timetable-available';
+          slot.style.top = (item.start / 1440 * 100) + '%';
+          slot.style.height = ((item.end - item.start) / 1440 * 100) + '%';
+          const time = clockLabel.format(new Date(item.row.starts_at)) + '–' + clockLabel.format(new Date(item.row.ends_at));
+          slot.textContent = time + '\n예약 가능';
+          slot.setAttribute('aria-label', dayLabel.format(new Date(item.row.starts_at)) + ' ' + time + ' 예약하기');
+          slot.addEventListener('click', () => onBook(item.row));
+          column.append(slot);
+        }
         for (const item of bookings) {
           const block = document.createElement('button');
           const { row } = item;
@@ -113,9 +131,25 @@ export function initializeTimetable(onChange, onSelect, isDaily = () => false) {
           block.addEventListener('click', () => onSelect(row));
           column.append(block);
         }
+        const line = document.createElement('div');
+        line.className = 'timetable-now';
+        line.dataset.midnight = String(timestamp);
+        column.append(line);
         body.append(column);
       });
       table.append(header, body);
+      const updateClock = () => {
+        const now = Date.now();
+        for (const line of table.querySelectorAll('.timetable-now')) {
+          const midnight = Number(line.dataset.midnight);
+          line.hidden = now < midnight || now >= midnight + DAY;
+          line.style.top = ((now - midnight) / DAY * 100) + '%';
+          line.setAttribute('aria-label', '현재 시각 ' + clockLabel.format(new Date(now)));
+        }
+        for (const slot of table.querySelectorAll('.timetable-available')) slot.disabled = Date.parse(slot.dataset.startsAt) <= now;
+      };
+      updateClock();
+      clockTimer = window.setInterval(updateClock, 60000);
       const key = current.from + ':' + current.days;
       const starts = rows.map(row => {
         const firstVisible = Math.max(new Date(row.starts_at).getTime(), new Date(current.from).getTime());

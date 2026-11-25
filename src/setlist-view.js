@@ -62,6 +62,16 @@ function songCard(entry, columns, context, openFeedback) {
 export function renderSetlist(result, context, openFeedback) {
   const { columns, entries } = setlistEntries(result);
   const root = node('div', undefined, 'setlist-content');
+  const searchLabel = node('label', '곡명·이름 검색', 'setlist-search');
+  const search = node('input');
+  search.type = 'search';
+  search.placeholder = '곡명, 가수 또는 참여자 이름';
+  search.autocomplete = 'off';
+  searchLabel.append(search);
+  const matches = node('p', undefined, 'muted setlist-count');
+  matches.setAttribute('role', 'status');
+  const empty = node('p', '검색 결과가 없습니다. 다른 이름이나 곡명을 입력해 주세요.', 'notice');
+  empty.hidden = true;
   const options = node('div', undefined, 'setlist-view-options');
   options.setAttribute('aria-label', '셋리스트 보기 방식');
   const buttons = ['곡별 보기', '표로 보기'].map((label, index) => {
@@ -87,6 +97,7 @@ export function renderSetlist(result, context, openFeedback) {
     th.scope = 'col';
     header.append(th);
   }
+  const searchable = [];
   for (const entry of entries) {
     const tr = node('tr');
     for (const { index } of columns) {
@@ -97,11 +108,26 @@ export function renderSetlist(result, context, openFeedback) {
       tr.append(cell);
     }
     body.append(tr);
-    cards.append(songCard(entry, columns, context, openFeedback));
+    const card = songCard(entry, columns, context, openFeedback);
+    cards.append(card);
+    searchable.push({ tr, card, text: columns.map(({ index }) => entry.row[index] || '').join(' ').normalize('NFC').toLocaleLowerCase() });
   }
   head.append(header);
   table.append(head, body);
   wrapper.append(table);
-  root.append(options, cards, wrapper);
+  const filter = () => {
+    const terms = search.value.normalize('NFC').trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    let count = 0;
+    for (const item of searchable) {
+      const visible = terms.every(term => item.text.includes(term));
+      item.tr.hidden = item.card.hidden = !visible;
+      if (visible) count++;
+    }
+    matches.textContent = terms.length ? entries.length + '개 중 ' + count + '개 표시' : '전체 ' + count + '개';
+    empty.hidden = count > 0 || !terms.length;
+  };
+  search.addEventListener('input', filter);
+  filter();
+  root.append(searchLabel, options, matches, empty, cards, wrapper);
   return { root, count: entries.length };
 }

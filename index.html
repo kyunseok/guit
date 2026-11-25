@@ -84,9 +84,6 @@
         <h2 id="calendar-title">일정 달력</h2>
         <div id="calendar-container-26-2" aria-live="polite"><p class="notice">달력을 불러오는 중입니다.</p></div>
         <hr>
-        <h2>동아리 일정</h2>
-        <ul id="schedule-list" class="schedule-list"></ul>
-        <hr>
         <h2>정모 자료</h2>
         <div id="materials-list" aria-live="polite"><p class="notice">자료를 불러오는 중입니다.</p></div>
         </div>
@@ -95,6 +92,8 @@
       <section id="room-reservation" class="view" aria-labelledby="reservation-title" hidden>
         <h2 id="reservation-title">동방(4층홀) 예약</h2>
         <div id="reservation-book-panel" class="reservation-panel">
+          <a class="reservation-check-link" href="#room-reservation/list">예약 현황에서 빈 시간 확인</a>
+          <output id="reservation-prefill" class="notice" hidden></output>
           <form id="reservation-form">
             <fieldset id="reservation-fields" disabled>
               <label for="reservation-user">사용자</label><input id="reservation-user" name="user_name" type="text" maxlength="100" autocomplete="name" required>
@@ -137,7 +136,8 @@
             </div>
             <p id="reservation-period" class="muted"></p>
           <div id="reservation-timetable-panel">
-            <p class="reservation-legend"><span>기타교실</span><span>합주연습</span><span class="fixed-legend">고정 일정</span></p>
+            <p class="reservation-legend"><span>일반 예약</span><span class="fixed-legend">고정 일정</span><span class="available-legend">예약 가능</span></p>
+            <p class="muted timetable-help">빈 시간대를 누르면 예약 날짜와 시간이 입력됩니다.</p>
             <output id="reservation-timetable-status" aria-live="polite"></output>
             <div id="reservation-timetable" class="reservation-timetable" aria-label="예약 시간표"></div>
           </div>
@@ -186,8 +186,13 @@
   </dialog>
   <dialog id="install-help" aria-labelledby="install-help-title">
     <div class="feedback-header"><h2 id="install-help-title">앱 설치</h2><button id="install-help-close" type="button">닫기</button></div>
-    <p>아이폰에서는 Safari의 공유 메뉴에서 ‘홈 화면에 추가’를 선택하세요. 안드로이드에서는 Chrome 메뉴의 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 선택하세요.</p>
-    <p>컴퓨터에서는 브라우저 주소창의 설치 아이콘이나 메뉴를 이용할 수 있습니다. 메뉴 이름과 지원 여부는 브라우저에 따라 다릅니다.</p>
+    <div data-install-platform="ios" hidden>
+      <p>Safari에서 아래 순서로 진행해 주세요.</p>
+      <ol class="install-steps"><li><strong>공유 메뉴 열기</strong><span>Safari에서 공유 아이콘을 누르세요.</span></li><li><strong>홈 화면에 추가</strong><span>공유 메뉴를 내려 ‘홈 화면에 추가’를 선택하세요.</span></li><li><strong>추가하기</strong><span>‘웹 앱으로 열기’가 보이면 켠 뒤 ‘추가’를 누르세요.</span></li></ol>
+      <p class="muted">카카오톡·인스타그램 안에서 열었다면 Safari에서 다시 열어 주세요.</p>
+    </div>
+    <div data-install-platform="android" hidden><ol class="install-steps"><li><strong>Chrome 메뉴 열기</strong><span>브라우저 메뉴를 누르세요.</span></li><li><strong>앱 설치 선택</strong><span>‘앱 설치’ 또는 ‘홈 화면에 추가’를 선택하고 설치를 완료하세요.</span></li></ol></div>
+    <div data-install-platform="desktop" hidden><p>브라우저 주소창의 설치 아이콘이나 메뉴에서 ‘앱 설치’를 선택해 주세요. 메뉴 이름과 지원 여부는 브라우저에 따라 다릅니다.</p></div>
     <p class="muted">설치 후에도 예약·취소·피드백과 최신 셋리스트에는 인터넷 연결이 필요합니다.</p>
     <p id="install-help-status" role="status"></p>
   </dialog>

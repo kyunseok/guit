@@ -1,6 +1,16 @@
 import { $ } from "./ui.js";
 
+export function installationPlatform(agent = navigator) {
+  if (/iPhone|iPad|iPod/.test(agent.userAgent) || (agent.platform === 'MacIntel' && agent.maxTouchPoints > 1)) return 'ios';
+  return /Android/.test(agent.userAgent) ? 'android' : 'desktop';
+}
+
 export async function initializePwa() {
+  const platform = installationPlatform();
+  const installLabel = platform === 'ios' ? '아이폰·아이패드 설치 방법' : '앱 설치';
+  $("install-app").textContent = installLabel;
+  $("install-help-title").textContent = platform === 'ios' ? '홈 화면에 기타하나 추가' : '앱 설치 방법';
+  for (const section of document.querySelectorAll('[data-install-platform]')) section.hidden = section.dataset.installPlatform !== platform;
   let installPrompt = null;
   let waitingWorker = null;
   let updating = false;
@@ -14,7 +24,7 @@ export async function initializePwa() {
   window.addEventListener("beforeinstallprompt", event => {
     event.preventDefault();
     installPrompt = event;
-    $("install-app").hidden = false;
+    $("install-app").hidden = installed();
   });
   window.addEventListener("appinstalled", () => {
     installPrompt = null;
