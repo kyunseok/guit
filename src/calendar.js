@@ -33,14 +33,8 @@ function eventCard(event) {
 }
 
 export function renderCalendar(target, events, image, semester, today = koreaInput().slice(0, 10)) {
-  const semesterEvents = events.filter(event => event.semester === semester);
-  const rows = semesterEvents.filter(event => event.date);
-  const pending = element('details', undefined, 'calendar-pending');
-  const undated = semesterEvents.filter(event => !event.date);
-  pending.hidden = !undated.length;
-  pending.append(element('summary', '날짜 미정 일정 · ' + undated.length + '개'));
-  for (const event of undated) pending.append(eventCard(event));
-  if (!rows.length) { calendarImage(target, image, semester); target.append(pending); return; }
+  const rows = events.filter(event => event.semester === semester && event.date);
+  if (!rows.length) { calendarImage(target, image, semester); return; }
   let selected = initialDate(rows, today);
   let month = selected.slice(0, 7);
   const byDate = new Map();
@@ -96,7 +90,7 @@ export function renderCalendar(target, events, image, semester, today = koreaInp
     options.append(button);
     return button;
   });
-  target.replaceChildren(options, toolbar, summary, layout, agenda, pending);
+  target.replaceChildren(options, toolbar, summary, layout, agenda);
 
   function showDetails() {
     detail.replaceChildren(element('h3', dayLabel.format(new Date(selected + 'T00:00:00+09:00'))));

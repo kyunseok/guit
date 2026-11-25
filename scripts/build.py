@@ -115,7 +115,7 @@ version = digest.hexdigest()[:16]
 imports = re.compile(r"((?:\bfrom\s+|\bimport\s*)[\"'])(\.[^\"']+\.js)([\"'])")
 for module in OUT.rglob("*.js"):
     module.write_text(imports.sub(lambda match: match[1] + match[2] + "?v=" + version + match[3], module.read_text()))
-html = (OUT / "index.html").read_text()
+html = (OUT / "index.html").read_text().replace("__BUILD_VERSION__", version).replace("__SHORT_VERSION__", version[:8])
 html = html.replace('href="styles.css"', f'href="styles.css?v={version}"').replace('src="app.js"', f'src="app.js?v={version}"')
 (OUT / "index.html").write_text(html)
 shell = []

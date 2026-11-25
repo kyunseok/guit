@@ -81,7 +81,7 @@ test('linked Slides offer direct PDF export without loading an embedded document
   dom.window.close();
 });
 
-test('calendar and agenda share event data, retaining undated notes and past entries', () => {
+test('calendar and agenda share event data, retaining past entries and omitting undated events', () => {
   const dom = new JSDOM('<div id="calendar"></div>', { url: 'https://example.test/guit/' });
   globalThis.document = dom.window.document;
   const target = document.getElementById('calendar');
@@ -93,12 +93,12 @@ test('calendar and agenda share event data, retaining undated notes and past ent
   assert.equal(agenda.hidden, false);
   assert.match(agenda.textContent, /18:00 – 19:00/);
   assert.match(agenda.querySelector('.agenda-past').textContent, /지난 행사/);
-  assert.match(target.querySelector('.calendar-pending').textContent, /중간고사.*8주차/);
+  assert.doesNotMatch(target.textContent, /날짜 미정 일정|중간고사/);
   target.querySelector('[aria-label="다음 달"]').click();
   assert.match(agenda.textContent, /이 달에는 등록된 일정이 없습니다/);
   assert.throws(() => validateEvents([{ id: 'invalid', semester: '26-2', date: null, title: '날짜 없음', startTime: '18:00' }]));
   renderCalendar(target, data.filter(event => !event.date), { path: 'assets/calendar.png' }, '26-2');
   assert.ok(target.querySelector('img'));
-  assert.match(target.textContent, /중간고사/);
+  assert.doesNotMatch(target.textContent, /중간고사/);
   dom.window.close();
 });
