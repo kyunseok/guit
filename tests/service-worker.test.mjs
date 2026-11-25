@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
 const scope = 'https://example.test/guit/';
-const files = ['index.html', 'app.js?v=test', 'config.json', 'data/content.json'];
+const files = ['index.html?v=test', 'app.js?v=test', 'config.json?v=test', 'data/content.json?v=test'];
 function worker() {
   const events = new Map(), stored = new Map(), deleted = [], requested = [];
   let skipped = 0, claimed = 0;
@@ -38,9 +38,11 @@ test('the offline shell works at a repository subpath and an update waits for ex
   await lifetime(instance, 'install');
   assert.equal(instance.skipped(), 0);
   assert.equal(instance.requested.length, files.length);
+  assert.ok(instance.requested.every(request => new URL(request.url).searchParams.get('v') === 'test'));
+  assert.equal(await (await fetchResult(instance, 'config.json')).text(), 'saved ' + scope + 'config.json?v=test');
   assert.ok(instance.requested.every(request => request.url.startsWith(scope) && request.cache === 'reload'));
   const response = await fetchResult(instance, './#room-reservation', { mode: 'navigate' });
-  assert.equal(await response.text(), 'saved ' + scope + 'index.html');
+  assert.equal(await response.text(), 'saved ' + scope + 'index.html?v=test');
   await lifetime(instance, 'message', { data: { type: 'IGNORE' } });
   assert.equal(instance.skipped(), 0);
   await lifetime(instance, 'message', { data: { type: 'ACTIVATE_UPDATE' } });
