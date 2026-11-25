@@ -374,7 +374,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .calendar-day-events span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .calendar-day-count { display: none; }
 .calendar-empty { background: #faf8f6; }
-.calendar-details { margin-top: 24px; margin: 0; padding: 18px; border-radius: var(--radius-card); background: #faf9f7; }
+.calendar-details { margin: 0; padding: 18px; border-radius: var(--radius-card); background: #faf9f7; }
 .calendar-details h3 { margin: 0 0 12px; font-size: 1rem; line-height: 1.6; }
 .calendar-event { border: 1px solid var(--border); border-radius: var(--radius-card); padding: 16px; margin-top: 10px; }
 .calendar-event h4 { color: var(--accent); margin: 0 0 12px; font-size: 1rem; overflow-wrap: anywhere; }
