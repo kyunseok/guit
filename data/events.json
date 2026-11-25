@@ -160,12 +160,5 @@
     "startTime": "",
     "endTime": "",
     "location": ""
-  },
-  {
-    "id": "midterms",
-    "semester": "26-2",
-    "date": null,
-    "title": "중간고사",
-    "notes": "8주차 · 날짜 미정"
   }
 ]

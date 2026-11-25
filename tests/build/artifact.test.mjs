@@ -30,6 +30,10 @@ test('all release imports resolve with the same content version and no developme
   const files = await walk(out);
   assert.equal(dom.window.document.querySelector('#recruitment'), null);
   assert.ok(dom.window.document.querySelector('#about #install-app'));
+  const versionLabel = dom.window.document.querySelector('#about #app-version');
+  assert.equal(versionLabel.textContent, 'v.' + version.slice(0, 8));
+  assert.equal(versionLabel.title, '현재 버전 ' + version);
+  assert.doesNotMatch(html, /__BUILD_VERSION__|__SHORT_VERSION__/);
   validateEvents(JSON.parse(await read('data/events.json')));
   assert.ok(files.every(file => !path.basename(file).includes('recruitment')));
   for (const file of files.filter(file => file.endsWith('.js'))) {
