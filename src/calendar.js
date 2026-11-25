@@ -107,7 +107,7 @@ export function renderCalendar(target, events, image, semester, today = koreaInp
 
   function renderAgenda() {
     agenda.replaceChildren();
-    const dates = [...byDate.keys()].filter(date => date.startsWith(month)).sort();
+    const dates = [...byDate.keys()].filter(date => date.startsWith(month)).sort((a, b) => a.localeCompare(b));
     if (!dates.length) { agenda.append(element('p', '이 달에는 등록된 일정이 없습니다.', 'notice')); return; }
     let previous = null;
     for (const date of dates) {
