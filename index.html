@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#854819">
-  <meta name="description" content="기타하나 동아리 소개, 일정, 기타교실 미션과 청소 일정, 정모 자료와 신입부원 모집">
+  <meta name="description" content="기타하나 동아리 소개, 일정, 기타교실 미션과 청소 일정, 정모 자료">
   <title>기타하나</title>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="기타하나">
   <meta property="og:title" content="기타하나">
-  <meta property="og:description" content="기타하나 동아리 소개, 일정, 동방 예약, 기타교실, 셋리스트와 신입부원 모집">
+  <meta property="og:description" content="기타하나 동아리 소개, 일정, 동방 예약, 기타교실, 셋리스트와 정모 자료">
   <meta property="og:url" content="https://kyunseok.github.io/guit/">
   <meta property="og:image" content="https://kyunseok.github.io/guit/assets/share-preview-20261117.png">
   <meta property="og:image:type" content="image/png">
@@ -18,7 +18,7 @@
   <meta property="og:image:alt" content="헤드폰을 쓰고 기타를 연주하는 토끼">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="기타하나">
-  <meta name="twitter:description" content="기타하나 동아리 소개, 일정, 동방 예약, 기타교실, 셋리스트와 신입부원 모집">
+  <meta name="twitter:description" content="기타하나 동아리 소개, 일정, 동방 예약, 기타교실, 셋리스트와 정모 자료">
   <meta name="twitter:image" content="https://kyunseok.github.io/guit/assets/share-preview-20261117.png">
   <meta name="twitter:image:alt" content="헤드폰을 쓰고 기타를 연주하는 토끼">
   <link rel="manifest" href="manifest.webmanifest">
@@ -52,14 +52,14 @@
         <a href="#room-reservation" data-view="room-reservation">동방 예약</a>
         <a href="#guitar-class" data-view="guitar-class">기타교실</a>
         <a href="#performances" data-view="performances">셋리스트</a>
-        <a href="#recruitment" data-view="recruitment">신입부원 모집</a>
       </nav>
     </header>
-    <p id="offline-status" class="notice warning" role="status" hidden>오프라인입니다. 저장된 화면을 표시하며 예약·취소·지원서·피드백과 최신 셋리스트 조회에는 인터넷 연결이 필요합니다. PDF는 오프라인으로 저장되지 않습니다.</p>
+    <p id="offline-status" class="notice warning" role="status" hidden>오프라인입니다. 저장된 화면을 표시하며 예약·취소·피드백과 최신 셋리스트 조회에는 인터넷 연결이 필요합니다. PDF는 오프라인으로 저장되지 않습니다.</p>
     <div id="update-status" class="notice app-update" role="status" hidden>
       <p>새 버전이 준비되었습니다. 새로고침하면 입력 중인 내용이 초기화됩니다.</p>
       <button id="update-app" type="button">지금 새로고침</button>
     </div>
+    <div id="connection-status" role="status"></div>
     <main id="main" tabindex="-1">
       <aside id="side-tabs" hidden>
         <nav id="reservation-nav" class="section-tabs" aria-label="동방(4층홀) 예약" hidden>
@@ -71,21 +71,18 @@
           <nav id="performance-nav" class="section-tabs" aria-label="공연 선택"></nav>
           <div class="performance-picker"><label for="performance-select">공연 선택</label><select id="performance-select"></select></div>
         </div>
-        <div id="recruitment-nav" class="section-tabs" role="tablist" aria-orientation="vertical" hidden aria-label="신입부원 모집">
-          <button id="apply-tab" role="tab" aria-selected="true" aria-controls="apply-panel" type="button">지원서 작성</button>
-          <button id="lookup-tab" role="tab" aria-selected="false" aria-controls="lookup-panel" tabindex="-1" type="button">제출 내역 확인</button>
-        </div>
       </aside>
       <div class="view-content">
       <section id="about" class="view" aria-labelledby="about-title">
         <h2 id="about-title">동아리 소개</h2>
         <p class="introduction" id="introduction"></p>
         <div class="contact"><strong>Contact</strong><p>김윤석(<a href="mailto:kyunseok@postech.ac.kr">kyunseok@postech.ac.kr</a>)</p></div>
+        <div class="about-install"><button id="install-app" type="button">앱 설치</button></div>
       </section>
       <section id="schedule" class="view" aria-label="동아리 일정" hidden>
         <div id="schedule-26-2" class="semester-panel">
         <h2 id="calendar-title">일정 달력</h2>
-        <div id="calendar-container" aria-live="polite"><p class="notice">달력을 불러오는 중입니다.</p></div>
+        <div id="calendar-container-26-2" aria-live="polite"><p class="notice">달력을 불러오는 중입니다.</p></div>
         <hr>
         <h2>동아리 일정</h2>
         <ul id="schedule-list" class="schedule-list"></ul>
@@ -93,7 +90,7 @@
         <h2>정모 자료</h2>
         <div id="materials-list" aria-live="polite"><p class="notice">자료를 불러오는 중입니다.</p></div>
         </div>
-        <div id="schedule-27-1" class="semester-panel" hidden><h2>27-1학기 동아리 일정</h2><p class="notice">27-1학기 일정과 자료는 아직 등록되지 않았습니다.</p></div>
+        <div id="schedule-27-1" class="semester-panel" hidden><h2>27-1학기 일정 달력</h2><div id="calendar-container-27-1" aria-live="polite"></div></div>
       </section>
       <section id="room-reservation" class="view" aria-labelledby="reservation-title" hidden>
         <h2 id="reservation-title">동방(4층홀) 예약</h2>
@@ -165,47 +162,9 @@
       <section id="performances" class="view" aria-label="셋리스트" hidden>
         <div id="performance-panels"></div>
       </section>
-      <section id="recruitment" class="view" aria-labelledby="recruitment-title" hidden>
-        <h2 id="recruitment-title">신입부원 모집</h2>
-        <div id="connection-status" role="status"></div>
-        <div id="apply-panel" role="tabpanel" aria-labelledby="apply-tab">
-          <form id="application-form">
-            <fieldset id="application-fields">
-              <label for="name">이름</label><input id="name" name="name" maxlength="10" autocomplete="name" required>
-              <label for="student-id">학번</label><input id="student-id" name="student_id" maxlength="20" required>
-              <label for="phone">연락처</label><input id="phone" name="phone" type="tel" maxlength="15" autocomplete="tel" required>
-              <label for="motive">지원 사유</label><textarea id="motive" name="motive" maxlength="1000" rows="5" placeholder="기타하나에 지원하게 된 동기를 자유롭게 적어주세요." required></textarea>
-              <hr>
-              <fieldset class="slot-options"><legend>면접 가능 일정 선택 (복수 선택)</legend><p class="muted">가능한 시간을 모두 선택해 주세요.</p><div id="interview-slots"></div></fieldset>
-              <button class="primary" type="submit">지원서 제출하기</button>
-            </fieldset>
-          </form>
-          <div id="submit-status" role="status" aria-live="polite"></div>
-        </div>
-        <div id="lookup-panel" role="tabpanel" aria-labelledby="lookup-tab" hidden>
-          <p>발급받은 6자리 지원서 코드를 입력하여 제출 내역을 확인할 수 있습니다.</p>
-          <form id="lookup-form"><label for="application-code">지원서 코드 (6자리 영문/숫자)</label><input id="application-code" name="code" maxlength="6" minlength="6" pattern="[A-Za-z0-9]{6}" autocapitalize="characters" spellcheck="false" required><button type="submit" id="lookup-button">내 지원서 조회하기</button></form>
-          <div id="lookup-result" aria-live="polite"></div>
-        <hr>
-        <h2>지원서 현황 및 면접 배정 관리</h2>
-        <form id="admin-login-form" class="admin-login">
-          <input id="admin-password" type="password" aria-label="비밀번호" autocomplete="current-password" maxlength="128" required>
-          <button id="admin-login-button" type="submit" aria-label="관리 화면 열기" disabled>&gt;</button>
-        </form>
-        <div id="admin-login-status" role="status" aria-live="polite"></div>
-        <div id="admin-panel" hidden>
-        <div class="toolbar"><button id="refresh-applicants" type="button">목록 새로고침</button></div>
-        <div id="applicants-status" role="status" aria-live="polite"></div>
-        <div id="applicants-table"></div>
-        <button id="assign-interviews" class="primary" type="button" disabled>면접 시간 자동 배정</button>
-        <div id="assignment-result" hidden><h3>면접 시간 자동 배정 결과</h3><div id="assignment-table"></div><button id="download-csv" type="button">배정 결과 다운로드 (CSV)</button></div>
-        </div>
-        </div>
-      </section>
       </div>
     </main>
-    <footer class="site-footer"><button id="install-app" type="button">앱 설치</button></footer>
-    <noscript><p class="notice">메뉴와 모집 기능을 사용하려면 브라우저에서 JavaScript를 허용해 주세요.</p></noscript>
+    <noscript><p class="notice">메뉴와 예약 기능을 사용하려면 브라우저에서 JavaScript를 허용해 주세요.</p></noscript>
   </div>
   <dialog id="feedback-dialog" aria-labelledby="feedback-title">
     <div class="feedback-header"><h2 id="feedback-title">곡 피드백</h2><button id="feedback-close" type="button" aria-label="피드백 닫기">×</button></div>
@@ -229,7 +188,7 @@
     <div class="feedback-header"><h2 id="install-help-title">앱 설치</h2><button id="install-help-close" type="button">닫기</button></div>
     <p>아이폰에서는 Safari의 공유 메뉴에서 ‘홈 화면에 추가’를 선택하세요. 안드로이드에서는 Chrome 메뉴의 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 선택하세요.</p>
     <p>컴퓨터에서는 브라우저 주소창의 설치 아이콘이나 메뉴를 이용할 수 있습니다. 메뉴 이름과 지원 여부는 브라우저에 따라 다릅니다.</p>
-    <p class="muted">설치 후에도 예약·취소·지원서·피드백과 최신 셋리스트에는 인터넷 연결이 필요합니다.</p>
+    <p class="muted">설치 후에도 예약·취소·피드백과 최신 셋리스트에는 인터넷 연결이 필요합니다.</p>
     <p id="install-help-status" role="status"></p>
   </dialog>
 </body>

@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
+import { validateEvents } from '../../src/calendar-rules.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const out = path.join(root, 'dist');
@@ -27,6 +28,10 @@ test('all release imports resolve with the same content version and no developme
   assert.match(version, /^[a-f0-9]{16}$/);
   assert.equal(new URL(dom.window.document.querySelector('link[rel=stylesheet]').href).searchParams.get('v'), version);
   const files = await walk(out);
+  assert.equal(dom.window.document.querySelector('#recruitment'), null);
+  assert.ok(dom.window.document.querySelector('#about #install-app'));
+  validateEvents(JSON.parse(await read('data/events.json')));
+  assert.ok(files.every(file => !path.basename(file).includes('recruitment')));
   for (const file of files.filter(file => file.endsWith('.js'))) {
     execFileSync(process.execPath, ['--check', file]);
     const code = await readFile(file, 'utf8');

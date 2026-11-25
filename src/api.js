@@ -84,39 +84,6 @@ export function createApi(config, transport = fetch) {
           method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(values)
         });
       } catch (error) { if (error.code !== "23505") throw error; }
-    },
-    async submit(values) {
-      const result = await request("rpc/guitarhana_submit_application_v1", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-          p_name: values.name, p_student_id: values.student_id, p_phone: values.phone,
-          p_motive: values.motive, p_slots: values.slots
-        })
-      });
-      if (typeof result.data !== "string" || !/^[A-Z0-9]{6}$/.test(result.data)) throw new Error("INVALID_RESPONSE");
-      return result.data;
-    },
-    async lookup(code) {
-      if (!/^[A-Z0-9]{6}$/.test(code)) throw new Error("INVALID_CODE");
-      const result = await request("rpc/guitarhana_lookup_application_v1", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_code: code })
-      });
-      if (result.data !== null && (typeof result.data !== "object" || result.data.id !== code)) throw new Error("INVALID_RESPONSE");
-      return result.data;
-    },
-    async list(password) {
-      const rows = [];
-      for (let offset = 0; ; ) {
-        const result = await request("rpc/guitarhana_admin_applicants_v1", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ p_password: password, p_offset: offset, p_limit: 500 })
-        });
-        const page = result.data;
-        if (!Array.isArray(page?.rows) || !Number.isInteger(page.total)) throw new Error("INVALID_RESPONSE");
-        rows.push(...page.rows);
-        offset += page.rows.length;
-        if (!page.rows.length || offset >= page.total) break;
-      }
-      return rows;
     }
   };
 }

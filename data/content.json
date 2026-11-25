@@ -88,13 +88,6 @@
       ]
     }
   ],
-  "interviewSlots": [
-    "9월 4일 (수) 18:00 - 18:30",
-    "9월 4일 (수) 18:30 - 19:00",
-    "9월 5일 (목) 18:00 - 18:30",
-    "9월 5일 (목) 18:30 - 19:00",
-    "9월 6일 (금) 19:00 - 19:30"
-  ],
   "materialLinks": [
     {
       "week": 10,
@@ -126,7 +119,7 @@
     {
       "id": "collaboration",
       "title": "기타하나x보우시즈 연합공연",
-      "sheetUrl": ""
+      "sheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?usp=sharing"
     },
     {
       "id": "internal",

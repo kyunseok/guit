@@ -1,0 +1,164 @@
+[
+  {
+    "id": "schedule-1",
+    "semester": "26-2",
+    "date": "2026-10-12",
+    "title": "깉보 전체 미팅",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-2",
+    "semester": "26-2",
+    "date": "2026-10-15",
+    "title": "정모3",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-3",
+    "semester": "26-2",
+    "date": "2026-11-06",
+    "title": "정모4",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-4",
+    "semester": "26-2",
+    "date": "2026-11-09",
+    "title": "깉보 1차 리허설",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-5",
+    "semester": "26-2",
+    "date": "2026-11-11",
+    "title": "깉보 직전 리허설",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-6",
+    "semester": "26-2",
+    "date": "2026-11-12",
+    "title": "깉보 공연",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-7",
+    "semester": "26-2",
+    "date": "2026-11-13",
+    "title": "정모5",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-8",
+    "semester": "26-2",
+    "date": "2026-11-14",
+    "title": "스타디움",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-9",
+    "semester": "26-2",
+    "date": "2026-11-20",
+    "title": "내부공연",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-10",
+    "semester": "26-2",
+    "date": "2026-11-23",
+    "title": "동방정검",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-11",
+    "semester": "26-2",
+    "date": "2026-11-26",
+    "title": "홈커밍 리허설",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-12",
+    "semester": "26-2",
+    "date": "2026-11-27",
+    "title": "정모6",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-13",
+    "semester": "26-2",
+    "date": "2026-11-28",
+    "title": "홈커밍",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-14",
+    "semester": "26-2",
+    "date": "2026-12-01",
+    "title": "정기 1차 리허설",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-15",
+    "semester": "26-2",
+    "date": "2026-12-04",
+    "title": "정모7",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-16",
+    "semester": "26-2",
+    "date": "2026-12-10",
+    "title": "정기 직전 리허설",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-17",
+    "semester": "26-2",
+    "date": "2026-12-11",
+    "title": "정기 공연",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  },
+  {
+    "id": "schedule-18",
+    "semester": "26-2",
+    "date": "2026-12-11",
+    "title": "종강총회",
+    "startTime": "",
+    "endTime": "",
+    "location": ""
+  }
+]
