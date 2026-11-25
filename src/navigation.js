@@ -1,6 +1,6 @@
 import { $, element } from "./ui.js";
 
-export function initializeNavigation({ reservations, performances, recruitment }) {
+export function initializeNavigation({ reservations, performances }) {
   let activeView = "";
   const mainNav = document.querySelector(".main-nav");
 
@@ -26,7 +26,7 @@ export function initializeNavigation({ reservations, performances, recruitment }
 
   function showView(moveFocus = false) {
     const [requested, performance, sheet] = location.hash.slice(1).split("/");
-    const view = ["about", "schedule", "room-reservation", "guitar-class", "performances", "recruitment"].includes(requested) ? requested : "about";
+    const view = ["about", "schedule", "room-reservation", "guitar-class", "performances"].includes(requested) ? requested : "about";
     for (const section of document.querySelectorAll(".view")) section.hidden = section.id !== view;
     for (const link of document.querySelectorAll("[data-view]")) {
       if (link.dataset.view === view) link.setAttribute("aria-current", "page");
@@ -39,13 +39,11 @@ export function initializeNavigation({ reservations, performances, recruitment }
     $("side-tabs").hidden = !hasTabs;
     $("reservation-nav").hidden = view !== "room-reservation";
     $("performance-navigation").hidden = view !== "performances";
-    $("recruitment-nav").hidden = view !== "recruitment";
     $("semester-nav").hidden = !["schedule", "guitar-class"].includes(view);
     if (view === "schedule" || view === "guitar-class") showSemester(view, performance);
     if (view === "performances") performances.show(performance, activeView !== view, sheet);
     reservations.show(view === "room-reservation", performance);
     activeView = view;
-    if (view === "recruitment") recruitment.refresh();
   }
 
   function showSemester(view, requested) {

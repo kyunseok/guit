@@ -42,12 +42,13 @@ if url or key:
     if parsed.scheme != "https" or not parsed.netloc or parsed.username or not public_key(key):
         raise ValueError("config.json에는 HTTPS 프로젝트 URL과 publishable 또는 anon 키만 사용할 수 있습니다.")
 else:
-    print("Supabase is not configured. Public pages will work; recruitment stays unavailable.")
+    print("Supabase is not configured. Public pages will work; reservations and feedback stay unavailable.")
 
 content = json.loads((ROOT / "data/content.json").read_text())
 assert isinstance(content["introduction"], str)
 assert isinstance(content["schedule"], list)
-assert isinstance(content["interviewSlots"], list)
+events = json.loads((ROOT / "data/events.json").read_text())
+assert isinstance(events, list)
 
 if OUT.exists():
     shutil.rmtree(OUT)
@@ -57,18 +58,25 @@ for name in ("index.html", "styles.css", "app.js", "manifest.webmanifest", "guit
 for module in sorted((ROOT / "src").rglob("*.js")):
     copy(module, OUT / module.relative_to(ROOT))
 copy(ROOT / "data/content.json", OUT / "data/content.json")
+copy(ROOT / "data/events.json", OUT / "data/events.json")
 copy(ROOT / "assets/cleantheroom.png", OUT / "assets/cleantheroom.png")
 copy(ROOT / "assets/share-preview-20261117.png", OUT / "assets/share-preview-20261117.png")
 (OUT / "config.json").write_text(json.dumps({"supabaseUrl": url, "supabasePublishableKey": key}, indent=2) + "\n")
 
-calendar = None
-for ext in ("png", "jpg", "jpeg", "webp"):
-    image = ROOT / "assets" / ("calendar." + ext)
-    if image.is_file():
-        relative = image.relative_to(ROOT).as_posix()
-        copy(image, OUT / relative)
-        calendar = {"path": quote(relative, safe="/")}
-        break
+calendar = {}
+for semester in ("26-2", "27-1"):
+    calendar[semester] = None
+    names = ["calendar-" + semester] + (["calendar"] if semester == "26-2" else [])
+    for name in names:
+        for ext in ("png", "jpg", "jpeg", "webp"):
+            image = ROOT / "assets" / (name + "." + ext)
+            if image.is_file():
+                relative = image.relative_to(ROOT).as_posix()
+                copy(image, OUT / relative)
+                calendar[semester] = {"path": quote(relative, safe="/")}
+                break
+        if calendar[semester]:
+            break
 
 materials = []
 folder = ROOT / "materials"

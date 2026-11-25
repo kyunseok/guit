@@ -1,21 +1,6 @@
 import { $, element, message } from "./ui.js";
 import { jsonFile, publicFileUrl } from "./files.js";
-
-export async function loadCalendar() {
-  try {
-    const calendar = await jsonFile("data/calendar.json");
-    if (!calendar) { message("calendar-container", "아직 등록된 달력이 없습니다."); return; }
-    const figure = element("figure", undefined, "calendar-figure");
-    const img = element("img");
-    img.loading = "lazy";
-    img.decoding = "async";
-    img.alt = "2학기 일정";
-    img.addEventListener("error", () => message("calendar-container", "달력 이미지를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.", "error"));
-    img.src = publicFileUrl(calendar.path, document.baseURI);
-    figure.append(img);
-    $("calendar-container").replaceChildren(figure);
-  } catch { message("calendar-container", "달력 이미지를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.", "error"); }
-}
+import { slidesPdfUrl } from "./materials.js";
 
 export async function loadMaterials() {
   try {
@@ -36,7 +21,19 @@ export async function loadMaterials() {
         paragraph.append(online);
         card.append(paragraph);
       }
-      if (!file.path) { $("materials-list").append(card); continue; }
+      if (!file.path) {
+        const exportUrl = slidesPdfUrl(file.url);
+        if (exportUrl) {
+          const download = element("a", "PDF 다운로드", "download-link");
+          download.href = exportUrl;
+          download.target = "_blank";
+          download.rel = "noopener noreferrer";
+          download.setAttribute("aria-label", file.title + " PDF 다운로드 (Google Slides)");
+          card.append(download);
+        }
+        $("materials-list").append(card);
+        continue;
+      }
       const link = element("a", "PDF 다운로드", "download-link");
       link.href = publicFileUrl(file.path, document.baseURI);
       link.download = file.name;
