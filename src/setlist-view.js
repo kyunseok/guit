@@ -62,7 +62,10 @@ function songCard(entry, columns, context, openFeedback) {
 export function renderSetlist(result, context, openFeedback) {
   const { columns, entries } = setlistEntries(result);
   const root = node('div', undefined, 'setlist-content');
+  const songCount = entries.filter(entry => !entry.example && entry.row[context.songColumn]?.trim()).length;
+  const count = node('p', context.songColumn < 0 ? '전체 ' + entries.length + '개' : '전체 ' + songCount + '곡', 'muted setlist-count');
   const options = node('div', undefined, 'setlist-view-options');
+  if (context.songColumn < 0) { root.classList.add('show-table'); options.hidden = true; }
   options.setAttribute('aria-label', '셋리스트 보기 방식');
   const buttons = ['곡별 보기', '표로 보기'].map((label, index) => {
     const button = node('button', label);
@@ -103,6 +106,6 @@ export function renderSetlist(result, context, openFeedback) {
   head.append(header);
   table.append(head, body);
   wrapper.append(table);
-  root.append(options, cards, wrapper);
+  root.append(options, count, cards, wrapper);
   return { root, count: entries.length };
 }

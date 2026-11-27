@@ -13,7 +13,7 @@ import { initializeNavigation } from "./src/navigation.js";
 let api = null;
 const getApi = () => api;
 const reservations = initializeReservations(getApi);
-const performances = initializePerformances(initializeFeedback(getApi, formatDate));
+const performances = initializePerformances(initializeFeedback(getApi, formatDate), getApi);
 const navigation = initializeNavigation({ reservations, performances });
 
 async function initialize() {
@@ -34,6 +34,7 @@ async function initialize() {
     api = createApi(config);
     } catch { message("connection-status", "예약·피드백 기능에 연결할 수 없습니다. 잠시 후 다시 접속해 주세요.", "error"); }
   reservations.connect();
+  performances.connect();
 }
 
 void initialize();
