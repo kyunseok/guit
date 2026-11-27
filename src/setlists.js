@@ -30,7 +30,7 @@ export function setlistTable(rows, headerRow = 1) {
   };
 }
 
-export async function fetchSetlist(sheetUrl, headerRow = 1, transport = fetch) {
+export async function fetchSetlist(sheetUrl, headerRow, transport = fetch) {
   const url = new URL(sheetUrl);
   const match = url.pathname.match(/^\/spreadsheets\/d\/([A-Za-z0-9_-]+)\//);
   if (url.protocol !== "https:" || url.hostname !== "docs.google.com" || !match) throw new Error("INVALID_SHEET");
@@ -44,6 +44,15 @@ export async function fetchSetlist(sheetUrl, headerRow = 1, transport = fetch) {
   try {
     const response = await transport(source.href, { signal: controller.signal, cache: "no-store", credentials: "omit" });
     if (!response.ok || !response.headers.get("content-type")?.includes("text/csv")) throw new Error("SHEET_UNAVAILABLE");
-    return setlistTable(parseCsv(await response.text()), headerRow);
+    const rows = parseCsv(await response.text());
+    const detectedRow = rows.slice(0, 10).findIndex(row => row.some(cell => /곡명|가수\s*[-–]\s*곡|song\s*title/i.test(cell)));
+    const heading = headerRow ?? (detectedRow >= 0 ? detectedRow : null);
+    if (heading === null) {
+      const width = Math.max(0, ...rows.map(row => row.length));
+      return { headers: Array.from({ length: width }, (_, index) => '항목 ' + (index + 1)), rows, songColumn: -1 };
+    }
+    const result = setlistTable(rows, heading);
+    result.songColumn = result.headers.findIndex(label => /곡명|가수\s*[-–]\s*곡|song\s*title/i.test(label));
+    return result;
   } finally { clearTimeout(timer); }
 }

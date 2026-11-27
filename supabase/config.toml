@@ -1,0 +1,2 @@
+[functions.sheet-catalog]
+verify_jwt = false

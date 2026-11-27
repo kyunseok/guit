@@ -1,0 +1,38 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { JSDOM } from 'jsdom';
+import { initializePerformances } from '../src/performances.js';
+import { feedbackKey } from '../src/feedback.js';
+
+test('all discovered sheets become tabs with independent counts and feedback, preserving legacy keys and fallback', async () => {
+  const dom = new JSDOM('<nav id="performance-nav"></nav><select id="performance-select"></select><div id="performance-panels"></div>', { url: 'https://example.test/' });
+  globalThis.document = dom.window.document;
+  globalThis.location = dom.window.location;
+  const url = 'https://docs.google.com/spreadsheets/d/test/edit';
+  let fail = false;
+  const api = { sheetsList: async () => { if (fail) throw new Error('offline'); return [{ gid: '17', title: '셋리' }, { gid: '42', title: '리허설' }, { gid: '99', title: '현황' }]; } };
+  globalThis.fetch = async input => new Response(new URL(input).searchParams.get('gid') === '99' ? '명단,인원\n가나다,3' : '안내\n구분,시간,곡명\n예시,20:00,예시곡\n1조,21:00,같은 곡', { headers: { 'content-type': 'text/csv' } });
+  const feedback = [];
+  const controller = initializePerformances(song => feedback.push(song), () => api);
+  controller.render([{ id: 'test', title: '공연', sheetUrl: url, sheets: [{ id: 'default', title: '원본', sheetUrl: url + '?gid=17', feedbackSheetUrl: url }] }]);
+  await controller.show('test', true);
+  assert.equal(document.querySelectorAll('.sheet-tabs a').length, 3);
+  assert.equal(document.querySelector('.setlist-count').textContent, '전체 1곡');
+  assert.equal(document.querySelector('input[type=search]'), null);
+  document.querySelector('.song-feedback-link').click();
+  const first = feedback.at(-1);
+  assert.equal(await feedbackKey(first.sheetUrl, first.title, first.group), await feedbackKey(url, '같은 곡', '1조'));
+  await controller.show('test', false, 'gid-42');
+  document.querySelector('.song-feedback-link').click();
+  const second = feedback.at(-1);
+  assert.notEqual(await feedbackKey(first.sheetUrl, first.title, first.group), await feedbackKey(second.sheetUrl, second.title, second.group));
+  assert.equal(document.querySelector('.setlist-source').href, url + '?gid=42');
+  await controller.show('test', false, 'gid-99');
+  assert.equal(document.querySelectorAll('.song-feedback-link').length, 0);
+  assert.equal(document.querySelector('.setlist-view-options').hidden, true);
+  fail = true;
+  await controller.show('test', true, 'gid-42');
+  assert.equal(document.querySelectorAll('.sheet-tabs a').length, 3);
+  assert.match(document.querySelector('.notice').textContent, /이전 목록/);
+  dom.window.close();
+});

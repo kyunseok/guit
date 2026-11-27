@@ -17,14 +17,14 @@ export function createApi(config, transport = fetch) {
   }
   const root = base.href.replace(/\/$/, "") + "/rest/v1/";
   const key = config.supabasePublishableKey;
-  async function request(path, options = {}) {
+  async function request(path, options = {}, endpoint = root) {
     if (globalThis.navigator?.onLine === false) throw new Error("OFFLINE");
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 20000);
     try {
       const headers = { apikey: key, Accept: "application/json", ...options.headers };
       if (!key.startsWith("sb_publishable_")) headers.Authorization = "Bearer " + key;
-      const response = await transport(root + path, { ...options, headers, signal: controller.signal, cache: "no-store" });
+      const response = await transport(endpoint + path, { ...options, headers, signal: controller.signal, cache: "no-store" });
       let data;
       try { data = await response.json(); } catch { data = null; }
       if (!response.ok) {
@@ -37,6 +37,13 @@ export function createApi(config, transport = fetch) {
     } finally { clearTimeout(timer); }
   }
   return {
+    async sheetsList(documentId) {
+      if (!/^[A-Za-z0-9_-]+$/.test(documentId)) throw new Error("INVALID_SHEET");
+      const result = await request("sheet-catalog?document=" + documentId, {}, base.href.replace(/\/$/, "") + "/functions/v1/");
+      const sheets = result.data?.sheets;
+      if (!Array.isArray(sheets) || !sheets.length || sheets.some(sheet => !/^\d+$/.test(sheet.gid) || typeof sheet.title !== "string" || !sheet.title.trim())) throw new Error("INVALID_RESPONSE");
+      return sheets;
+    },
     async reservationsList(from, to) {
       const rows = [];
       for (let offset = 0; ; offset += 500) {

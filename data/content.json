@@ -75,17 +75,68 @@
     {
       "id": "collaboration",
       "title": "기타하나x보우시즈 연합공연",
-      "sheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?usp=sharing"
+      "sheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?usp=sharing",
+      "sheets": [
+        {
+          "id": "default",
+          "title": "셋리",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?gid=0",
+          "feedbackSheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?usp=sharing"
+        },
+        {
+          "id": "gid-1256822724",
+          "title": "현황",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?gid=1256822724"
+        },
+        {
+          "id": "gid-1178146790",
+          "title": "시트4",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?gid=1178146790",
+          "headerRow": 1,
+          "songColumn": 1
+        },
+        {
+          "id": "gid-900334468",
+          "title": "1차리허설",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?gid=900334468"
+        },
+        {
+          "id": "gid-17328300",
+          "title": "직전리허설",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?gid=17328300"
+        },
+        {
+          "id": "gid-2011153415",
+          "title": "본공연",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1FSx2Gxu48BWoQd-rxCMHJ5a8zsTcMSqIqNpjCEkkG0Y/edit?gid=2011153415"
+        }
+      ]
     },
     {
       "id": "internal",
       "title": "내부공연",
-      "sheetUrl": "https://docs.google.com/spreadsheets/d/1R7M9B_caN-Sc55YipQvfKVjcFdTre2_gEy8XerUCcIo/edit?usp=sharing"
+      "sheetUrl": "https://docs.google.com/spreadsheets/d/1R7M9B_caN-Sc55YipQvfKVjcFdTre2_gEy8XerUCcIo/edit?usp=sharing",
+      "sheets": [
+        {
+          "id": "default",
+          "title": "셋리스트",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1R7M9B_caN-Sc55YipQvfKVjcFdTre2_gEy8XerUCcIo/edit?gid=68294040",
+          "feedbackSheetUrl": "https://docs.google.com/spreadsheets/d/1R7M9B_caN-Sc55YipQvfKVjcFdTre2_gEy8XerUCcIo/edit?usp=sharing"
+        }
+      ]
     },
     {
       "id": "homecoming",
       "title": "홈커밍",
-      "sheetUrl": "https://docs.google.com/spreadsheets/d/1BQPuOGXTS17kKMDtsiKmEiPrSdefIfm9Hz8OdqfWdt8/edit?usp=sharing"
+      "sheetUrl": "https://docs.google.com/spreadsheets/d/1BQPuOGXTS17kKMDtsiKmEiPrSdefIfm9Hz8OdqfWdt8/edit?usp=sharing",
+      "sheets": [
+        {
+          "id": "default",
+          "title": "셋리스트",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/1BQPuOGXTS17kKMDtsiKmEiPrSdefIfm9Hz8OdqfWdt8/edit?gid=1781721620",
+          "feedbackSheetUrl": "https://docs.google.com/spreadsheets/d/1BQPuOGXTS17kKMDtsiKmEiPrSdefIfm9Hz8OdqfWdt8/edit?usp=sharing"
+        }
+      ]
     },
     {
       "id": "regular",
@@ -109,7 +160,15 @@
     {
       "id": "clubtour",
       "title": "동아리탐방",
-      "sheetUrl": "https://docs.google.com/spreadsheets/d/14nDwNGf7K0-MlfYtrTwA4kk3TLgM8SdNyp5Db6IoHM4/edit?usp=sharing"
+      "sheetUrl": "https://docs.google.com/spreadsheets/d/14nDwNGf7K0-MlfYtrTwA4kk3TLgM8SdNyp5Db6IoHM4/edit?usp=sharing",
+      "sheets": [
+        {
+          "id": "default",
+          "title": "시트1",
+          "sheetUrl": "https://docs.google.com/spreadsheets/d/14nDwNGf7K0-MlfYtrTwA4kk3TLgM8SdNyp5Db6IoHM4/edit?gid=0",
+          "feedbackSheetUrl": "https://docs.google.com/spreadsheets/d/14nDwNGf7K0-MlfYtrTwA4kk3TLgM8SdNyp5Db6IoHM4/edit?usp=sharing"
+        }
+      ]
     }
   ]
 }
