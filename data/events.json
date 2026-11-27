@@ -103,62 +103,71 @@
     "semester": "26-2",
     "date": "2026-11-27",
     "title": "정모6",
-    "startTime": "",
+    "startTime": "20시 00분",
     "endTime": "",
-    "location": ""
+    "location": "무은재 308호"
   },
   {
     "id": "schedule-13",
     "semester": "26-2",
     "date": "2026-11-28",
     "title": "홈커밍",
-    "startTime": "",
+    "startTime": "20시 00분",
     "endTime": "",
-    "location": ""
+    "location": "대회의실 (동방에서 장비 옮기기부터 시작)"
   },
   {
     "id": "schedule-14",
     "semester": "26-2",
-    "date": "2026-12-01",
+    "date": "2026-12-03",
     "title": "정기 1차 리허설",
-    "startTime": "",
+    "startTime": "20시 00분",
     "endTime": "",
-    "location": ""
+    "location": "4층홀"
   },
   {
     "id": "schedule-15",
     "semester": "26-2",
     "date": "2026-12-04",
     "title": "정모7",
-    "startTime": "",
+    "startTime": "20시 00분",
     "endTime": "",
-    "location": ""
+    "location": "무은재 308호"
   },
   {
     "id": "schedule-16",
     "semester": "26-2",
-    "date": "2026-12-10",
-    "title": "정기 직전 리허설",
-    "startTime": "",
+    "date": "2026-12-06",
+    "title": "정기 2차 리허설",
+    "startTime": "20시 00분",
     "endTime": "",
-    "location": ""
+    "location": "4층홀"
   },
   {
     "id": "schedule-17",
     "semester": "26-2",
-    "date": "2026-12-11",
-    "title": "정기 공연",
-    "startTime": "",
+    "date": "2026-12-10",
+    "title": "정기 직전 리허설",
+    "startTime": "20시 00분",
     "endTime": "",
-    "location": ""
+    "location": "지곡회관 버거킹 소무대"
   },
   {
     "id": "schedule-18",
     "semester": "26-2",
     "date": "2026-12-11",
-    "title": "종강총회",
-    "startTime": "",
+    "title": "정기 공연",
+    "startTime": "20시 00분",
     "endTime": "",
-    "location": ""
+    "location": "지곡회관 버거킹 소무대"
+  },
+  {
+    "id": "schedule-19",
+    "semester": "26-2",
+    "date": "2026-12-11",
+    "title": "종강총회",
+    "startTime": "정기공연 직후",
+    "endTime": "",
+    "location": "무은재 308호"
   }
 ]
